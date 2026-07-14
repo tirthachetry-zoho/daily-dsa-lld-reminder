@@ -26,7 +26,7 @@ async function main() {
 
   // Upsert DSA problems
   for (const problem of dsaProblems) {
-    const { error } = await supabase.from("Problem").upsert(
+    const { error } = await supabase.from("dsa_problems").upsert(
       {
         id: slugify(problem.title),
         title: problem.title,
@@ -47,7 +47,7 @@ async function main() {
 
   // Upsert System Design problems
   for (const problem of systemDesignProblems) {
-    const { error } = await supabase.from("Problem").upsert(
+    const { error } = await supabase.from("dsa_problems").upsert(
       {
         id: slugify(problem.title),
         title: problem.title,
@@ -69,11 +69,11 @@ async function main() {
 
   // Count results
   const { count: dsaCount } = await supabase
-    .from("Problem")
+    .from("dsa_problems")
     .select("*", { count: "exact", head: true })
     .eq("type", "DSA");
   const { count: sdCount } = await supabase
-    .from("Problem")
+    .from("dsa_problems")
     .select("*", { count: "exact", head: true })
     .eq("type", "SYSTEM_DESIGN");
 

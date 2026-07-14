@@ -15,7 +15,7 @@ create extension if not exists "pg_cron";     -- scheduled jobs
 -- ------------------------------------------------------------
 -- Tables
 -- ------------------------------------------------------------
-create table if not exists public.users (
+create table if not exists public.dsa_users (
   id                    uuid primary key default gen_random_uuid(),
   email                 text unique not null,
   password              text,
@@ -28,7 +28,7 @@ create table if not exists public.users (
   updated_at           timestamptz not null default now()
 );
 
-create table if not exists public.problems (
+create table if not exists public.dsa_problems (
   id              text primary key,
   title           text not null,
   difficulty      text not null check (difficulty in ('EASY','MEDIUM','HARD')),
@@ -43,31 +43,31 @@ create table if not exists public.problems (
   created_at      timestamptz not null default now()
 );
 
-create table if not exists public.sent_problems (
+create table if not exists public.dsa_sent_problems (
   id          uuid primary key default gen_random_uuid(),
-  user_id     uuid not null references public.users(id) on delete cascade,
-  problem_id  text not null references public.problems(id),
+  user_id     uuid not null references public.dsa_users(id) on delete cascade,
+  problem_id  text not null references public.dsa_problems(id),
   sent_at     timestamptz not null default now(),
   opened      boolean not null default false,
   completed   boolean not null default false,
   unique (user_id, problem_id, sent_at)
 );
 
-create index if not exists idx_sent_problems_user on public.sent_problems(user_id);
-create index if not exists idx_problems_type on public.problems(type);
+create index if not exists idx_sent_problems_user on public.dsa_sent_problems(user_id);
+create index if not exists idx_problems_type on public.dsa_problems(type);
 
 -- ------------------------------------------------------------
 -- Row Level Security (RLS)
 -- The app uses the SERVICE ROLE key server-side (bypasses RLS),
 -- so these policies are for safety if the anon key is ever used.
 -- ------------------------------------------------------------
-alter table public.users enable row level security;
-alter table public.problems enable row level security;
-alter table public.sent_problems enable row level security;
+alter table public.dsa_users enable row level security;
+alter table public.dsa_problems enable row level security;
+alter table public.dsa_sent_problems enable row level security;
 
 -- Allow anonymous read of problems (so the app can show previews)
-drop policy if exists "problems readable by all" on public.problems;
-create policy "problems readable by all" on public.problems
+drop policy if exists "dsa_problems readable by all" on public.dsa_problems;
+create policy "dsa_problems readable by all" on public.dsa_problems
   for select using (true);
 
 -- ------------------------------------------------------------
@@ -96,7 +96,7 @@ declare
   v_payload jsonb;
   v_endpoint text;
 begin
-  select reminder_time into v_reminder_time from public.users where id = p_user_id;
+  select reminder_time into v_reminder_time from public.dsa_users where id = p_user_id;
   if v_reminder_time is null then
     return;
   end if;
@@ -147,9 +147,9 @@ begin
 end;
 $$;
 
-drop trigger if exists trg_sync_user_cron on public.users;
+drop trigger if exists trg_sync_user_cron on public.dsa_users;
 create trigger trg_sync_user_cron
-  after insert or update on public.users
+  after insert or update on public.dsa_users
   for each row execute function public.sync_user_cron();
 
 -- When a user is deleted, clean up their cron job
@@ -163,7 +163,7 @@ begin
 end;
 $$;
 
-drop trigger if exists trg_cleanup_user_cron on public.users;
+drop trigger if exists trg_cleanup_user_cron on public.dsa_users;
 create trigger trg_cleanup_user_cron
-  after delete on public.users
+  after delete on public.dsa_users
   for each row execute function public.cleanup_user_cron();

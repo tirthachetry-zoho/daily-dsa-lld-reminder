@@ -21,7 +21,7 @@ export interface ProblemRow {
 export class ProblemRepository {
   async findById(id: string): Promise<ProblemRow | null> {
     const { data, error } = await supabase
-      .from("problems")
+      .from("dsa_problems")
       .select("*")
       .eq("id", id)
       .maybeSingle();
@@ -31,7 +31,7 @@ export class ProblemRepository {
 
   async findByType(type: ProblemType): Promise<ProblemRow[]> {
     const { data, error } = await supabase
-      .from("problems")
+      .from("dsa_problems")
       .select("*")
       .eq("type", type);
     if (error) throw error;
@@ -40,7 +40,7 @@ export class ProblemRepository {
 
   async findRandomByType(type: ProblemType): Promise<ProblemRow | null> {
     const { data, error } = await supabase
-      .from("problems")
+      .from("dsa_problems")
       .select("id")
       .eq("type", type);
     if (error) throw error;
@@ -56,14 +56,14 @@ export class ProblemRepository {
   ): Promise<ProblemRow | null> {
     // Fetch ids of problems already sent to this user of this type
     const { data: sent, error: sentError } = await supabase
-      .from("sent_problems")
+      .from("dsa_sent_problems")
       .select("problem_id")
       .eq("user_id", userId);
     if (sentError) throw sentError;
 
     const sentIds = (sent as { problem_id: string }[]).map((s) => s.problem_id);
 
-    let query = supabase.from("problems").select("id").eq("type", type);
+    let query = supabase.from("dsa_problems").select("id").eq("type", type);
     if (sentIds.length > 0) {
       query = query.not("id", "in", `(${sentIds.join(",")})`);
     }
@@ -89,7 +89,7 @@ export class ProblemRepository {
     type: ProblemType;
   }): Promise<ProblemRow> {
     const { data: created, error } = await supabase
-      .from("problems")
+      .from("dsa_problems")
       .insert({
         title: data.title,
         difficulty: data.difficulty,
@@ -110,7 +110,7 @@ export class ProblemRepository {
 
   async countByType(type: ProblemType): Promise<number> {
     const { count, error } = await supabase
-      .from("problems")
+      .from("dsa_problems")
       .select("*", { count: "exact", head: true })
       .eq("type", type);
     if (error) throw error;
@@ -119,7 +119,7 @@ export class ProblemRepository {
 
   async delete(id: string): Promise<ProblemRow> {
     const { data, error } = await supabase
-      .from("problems")
+      .from("dsa_problems")
       .delete()
       .eq("id", id)
       .select("*")

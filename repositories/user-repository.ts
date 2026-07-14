@@ -16,7 +16,7 @@ export interface UserRow {
 export class UserRepository {
   async findById(id: string): Promise<UserRow | null> {
     const { data, error } = await supabase
-      .from("users")
+      .from("dsa_users")
       .select("*")
       .eq("id", id)
       .maybeSingle();
@@ -26,7 +26,7 @@ export class UserRepository {
 
   async findByEmail(email: string): Promise<UserRow | null> {
     const { data, error } = await supabase
-      .from("users")
+      .from("dsa_users")
       .select("*")
       .eq("email", email)
       .maybeSingle();
@@ -39,7 +39,7 @@ export class UserRepository {
     password?: string;
   }): Promise<UserRow> {
     const { data: created, error } = await supabase
-      .from("users")
+      .from("dsa_users")
       .insert({
         email: data.email,
         password: data.password ?? null,
@@ -61,7 +61,7 @@ export class UserRepository {
     }>
   ): Promise<UserRow> {
     const { data: updated, error } = await supabase
-      .from("users")
+      .from("dsa_users")
       .update(data)
       .eq("id", id)
       .select("*")
@@ -72,7 +72,7 @@ export class UserRepository {
 
   async findActiveUsers(): Promise<UserRow[]> {
     const { data, error } = await supabase
-      .from("users")
+      .from("dsa_users")
       .select("*")
       .eq("is_active", true);
     if (error) throw error;
@@ -81,7 +81,7 @@ export class UserRepository {
 
   async delete(id: string): Promise<UserRow> {
     const { data, error } = await supabase
-      .from("users")
+      .from("dsa_users")
       .delete()
       .eq("id", id)
       .select("*")

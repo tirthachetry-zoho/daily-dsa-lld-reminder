@@ -14,7 +14,7 @@ export interface SentProblemRow {
 export class SentProblemRepository {
   async findById(id: string): Promise<SentProblemRow | null> {
     const { data, error } = await supabase
-      .from("sent_problems")
+      .from("dsa_sent_problems")
       .select("*, problem:problems(*)")
       .eq("id", id)
       .maybeSingle();
@@ -24,7 +24,7 @@ export class SentProblemRepository {
 
   async findByUser(userId: string, limit?: number): Promise<SentProblemRow[]> {
     let query = supabase
-      .from("sent_problems")
+      .from("dsa_sent_problems")
       .select("*, problem:problems(*)")
       .eq("user_id", userId)
       .order("sent_at", { ascending: false });
@@ -39,7 +39,7 @@ export class SentProblemRepository {
     problemId: string
   ): Promise<SentProblemRow | null> {
     const { data, error } = await supabase
-      .from("sent_problems")
+      .from("dsa_sent_problems")
       .select("*, problem:problems(*)")
       .eq("user_id", userId)
       .eq("problem_id", problemId)
@@ -56,7 +56,7 @@ export class SentProblemRepository {
     todayEnd.setHours(23, 59, 59, 999);
 
     const { data, error } = await supabase
-      .from("sent_problems")
+      .from("dsa_sent_problems")
       .select("*, problem:problems(*)")
       .eq("user_id", userId)
       .gte("sent_at", todayStart.toISOString())
@@ -71,7 +71,7 @@ export class SentProblemRepository {
     problemId: string;
   }): Promise<SentProblemRow> {
     const { data: created, error } = await supabase
-      .from("sent_problems")
+      .from("dsa_sent_problems")
       .insert({ user_id: data.userId, problem_id: data.problemId })
       .select("*, problem:problems(*)")
       .single();
@@ -84,7 +84,7 @@ export class SentProblemRepository {
     completed: boolean
   ): Promise<SentProblemRow> {
     const { data, error } = await supabase
-      .from("sent_problems")
+      .from("dsa_sent_problems")
       .update({ completed })
       .eq("id", id)
       .select("*, problem:problems(*)")
@@ -95,7 +95,7 @@ export class SentProblemRepository {
 
   async updateOpened(id: string, opened: boolean): Promise<SentProblemRow> {
     const { data, error } = await supabase
-      .from("sent_problems")
+      .from("dsa_sent_problems")
       .update({ opened })
       .eq("id", id)
       .select("*, problem:problems(*)")
@@ -106,7 +106,7 @@ export class SentProblemRepository {
 
   async countByUser(userId: string): Promise<number> {
     const { count, error } = await supabase
-      .from("sent_problems")
+      .from("dsa_sent_problems")
       .select("*", { count: "exact", head: true })
       .eq("user_id", userId);
     if (error) throw error;
@@ -115,7 +115,7 @@ export class SentProblemRepository {
 
   async countCompletedByUser(userId: string): Promise<number> {
     const { count, error } = await supabase
-      .from("sent_problems")
+      .from("dsa_sent_problems")
       .select("*", { count: "exact", head: true })
       .eq("user_id", userId)
       .eq("completed", true);

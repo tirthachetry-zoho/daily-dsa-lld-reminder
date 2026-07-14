@@ -97,7 +97,7 @@ The app uses the **Supabase JS client** (no Prisma). Apply the schema + pg_cron 
 [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) in the **Supabase SQL Editor**
 (Project → SQL → New query → paste → Run).
 
-This creates the `users`, `problems`, and `sent_problems` tables, enables Row Level Security, and installs the
+This creates the `dsa_users`, `dsa_problems`, and `dsa_sent_problems` tables, enables Row Level Security, and installs the
 `pg_cron` functions/triggers that automatically schedule a per-user reminder job whenever a user is created or
 updates their `reminder_time` / `is_active`.
 
@@ -206,7 +206,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 Tables live in the `public` schema of your Supabase project.
 
-### users
+### dsa_users
 - `id`: uuid (PK)
 - `email`: text (unique)
 - `password`: text (hashed, optional for OAuth users)
@@ -217,7 +217,7 @@ Tables live in the `public` schema of your Supabase project.
 - `is_active`: boolean
 - `created_at`, `updated_at`: timestamptz
 
-### problems
+### dsa_problems
 - `id`: text (PK, slug of title)
 - `title`: text
 - `difficulty`: `EASY` | `MEDIUM` | `HARD`
@@ -228,10 +228,10 @@ Tables live in the `public` schema of your Supabase project.
 - `type`: `DSA` | `SYSTEM_DESIGN`
 - `created_at`: timestamptz
 
-### sent_problems
+### dsa_sent_problems
 - `id`: uuid (PK)
-- `user_id`: uuid → `users.id`
-- `problem_id`: text → `problems.id`
+- `user_id`: uuid → `dsa_users.id`
+- `problem_id`: text → `dsa_problems.id`
 - `sent_at`: timestamptz
 - `opened`: boolean
 - `completed`: boolean

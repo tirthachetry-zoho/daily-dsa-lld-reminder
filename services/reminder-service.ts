@@ -42,11 +42,27 @@ export class ReminderService {
           ? await this.getNextSystemDesignProblem(user.id)
           : null;
 
-        await emailService.sendReminderEmail(
-          user.email,
-          dsaProblem,
-          systemDesignProblem
-        );
+        try {
+          await emailService.sendReminderEmailWithRetry(
+            user.email,
+            dsaProblem,
+            systemDesignProblem
+          );
+        } catch (emailError) {
+          // After retries, the address is likely invalid/bouncing.
+          // Mark the user inactive so we stop trying to email them.
+          console.error(
+            `Permanently failed to email ${user.email} after retries. Marking inactive.`,
+            emailError
+          );
+          try {
+            await userRepository.update(user.id, { is_active: false });
+          } catch (updateErr) {
+            console.error(`Failed to deactivate user ${user.email}:`, updateErr);
+          }
+          results.errors++;
+          continue;
+        }
 
         await sentProblemRepository.create({
           userId: user.id,

@@ -19,6 +19,38 @@ export class EmailService {
     });
   }
 
+  /**
+   * Sends the reminder email with retries. Throws if it still fails after
+   * `maxRetries` attempts so the caller can mark the recipient as inactive.
+   */
+  async sendReminderEmailWithRetry(
+    to: string,
+    dsaProblem: ProblemRow,
+    systemDesignProblem: ProblemRow | null,
+    maxRetries = 3
+  ): Promise<void> {
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await this.sendReminderEmail(to, dsaProblem, systemDesignProblem);
+        return;
+      } catch (error) {
+        lastError = error;
+        console.error(
+          `Email send attempt ${attempt}/${maxRetries} failed for ${to}:`,
+          error
+        );
+        if (attempt < maxRetries) {
+          // Exponential backoff: 1s, 2s, ...
+          await new Promise((r) => setTimeout(r, 1000 * attempt));
+        }
+      }
+    }
+    throw lastError instanceof Error
+      ? lastError
+      : new Error(`Failed to send email to ${to} after ${maxRetries} retries`);
+  }
+
   private generateEmailHtml(
     to: string,
     dsaProblem: ProblemRow,

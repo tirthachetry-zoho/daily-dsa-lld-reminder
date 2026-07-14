@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   History,
   Settings,
-  Mail,
   LogOut,
   Menu,
   X,
@@ -19,7 +18,6 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "History", href: "/dashboard/history", icon: History },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
-  { name: "Email Preview", href: "/dashboard/email-preview", icon: Mail },
 ];
 
 export function DashboardSidebar({ email }: { email: string }) {

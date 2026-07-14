@@ -109,6 +109,46 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+## 🌐 How to Get Every Environment Variable
+
+This app is configured for **Supabase (PostgreSQL)** + **Resend** + **NextAuth**. Below is exactly where to obtain each value.
+
+### From Supabase (database + keys)
+1. Create a project at [supabase.com](https://supabase.com).
+2. **Project Settings → Database → Connection string**:
+   - **Connection pooling** (Session mode, port `6543`) → `DATABASE_URL` (append `?pgbouncer=true&connection_limit=1`).
+   - **Direct connection** (port `5432`) → `DIRECT_URL` (used by Prisma `db push`/migrations).
+   - The DB password is the one you set when creating the project (replace `YOUR_SUPABASE_DB_PASSWORD`).
+3. **Project Settings → API**:
+   - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL` (e.g. `https://<ref>.supabase.co`).
+   - **`anon` `public` key** → `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+   - **`service_role` key** → `SUPABASE_SERVICE_ROLE_KEY` (keep secret; never expose to the client).
+
+### From Resend (email sending)
+1. Sign up at [resend.com](https://resend.com) → **API Keys → Create API Key** → `RESEND_API_KEY`.
+2. **Domains → Add Domain** and verify it (e.g. `yourdomain.com`).
+3. Set `EMAIL_FROM` to an address on that domain, e.g. `noreply@yourdomain.com`.
+
+### From NextAuth (sessions)
+- `NEXTAUTH_SECRET`: generate with `openssl rand -base64 32`.
+- `NEXTAUTH_URL`: the app origin — `http://localhost:3000` for local dev, your Vercel URL in production.
+
+### From Google Cloud (optional — Google login)
+1. [Google Cloud Console → APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials).
+2. **Create Credentials → OAuth client ID** (Application type: Web application).
+3. Add authorized redirect URI: `https://<your-domain>/api/auth/callback/google`.
+4. Copy **Client ID** → `GOOGLE_CLIENT_ID` and **Client Secret** → `GOOGLE_CLIENT_SECRET`.
+
+### CRON_SECRET (optional — secures the reminder cron)
+- Any random string, e.g. `openssl rand -base64 24`. The Vercel cron job / GitHub Action sends it as a `Bearer` token.
+
+### Where to put them
+- **Local**: paste into `.env` (see `.env.example`).
+- **Vercel**: Project Settings → Environment Variables.
+- **GitHub Actions**: repository Secrets.
+
+> Note: `DATABASE_URL` is always required. `DIRECT_URL` is required by the Prisma schema (`directUrl`) — locally point it at the same DB; on Supabase use the direct (non-pooled) connection.
+
 ## 🔑 Key Creation Guide
 
 This section explains how to obtain every value in `.env`. Items marked **(required)** are needed for the app to function; the rest are optional.

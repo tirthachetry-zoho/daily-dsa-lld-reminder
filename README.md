@@ -109,6 +109,78 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+## 🔑 Key Creation Guide
+
+This section explains how to obtain every value in `.env`. Items marked **(required)** are needed for the app to function; the rest are optional.
+
+### 1. Database — Local PostgreSQL (required for local dev)
+
+You already have this working with trust auth on localhost:
+
+```env
+DATABASE_URL="postgresql://tirtha@localhost:5432/dsa_reminder?schema=public"
+DIRECT_URL="postgresql://tirtha@localhost:5432/dsa_reminder?schema=public"
+```
+
+To recreate it from scratch:
+
+```bash
+createdb dsa_reminder          # uses your local 'tirtha' role (trust auth)
+npm run db:push                # create tables from prisma/schema.prisma
+npm run db:seed                # load DSA + System Design problems
+```
+
+> **Production alternative (Vercel):** use **Supabase** instead — see the [Deployment](#-deployment-vercel--supabase) section for the pooled/direct connection strings.
+
+### 2. Resend — Email sending (required for reminders to send)
+
+1. Sign up at [resend.com](https://resend.com) → **API Keys → Create API Key**.
+2. Copy the key into `RESEND_API_KEY`.
+3. **Domains → Add Domain** and verify it (e.g. `yourdomain.com`).
+4. Set `EMAIL_FROM` to an address on that domain, e.g. `noreply@yourdomain.com`.
+
+Without these, the app runs but reminder emails fail to send.
+
+### 3. NextAuth — Session secret (required for login)
+
+Generate a random secret and set `NEXTAUTH_SECRET`:
+
+```bash
+openssl rand -base64 32
+```
+
+Set `NEXTAUTH_URL` to the app origin:
+
+- Local: `http://localhost:3000`
+- Production: your Vercel URL (e.g. `https://your-app.vercel.app`)
+
+### 4. Google OAuth (optional — Google login)
+
+1. Go to [Google Cloud Console → APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials).
+2. **Create Credentials → OAuth client ID** (Application type: Web application).
+3. Add an authorized redirect URI: `https://<your-domain>/api/auth/callback/google`.
+4. Copy **Client ID** → `GOOGLE_CLIENT_ID` and **Client Secret** → `GOOGLE_CLIENT_SECRET`.
+
+### 5. CRON_SECRET (optional — secures the reminder cron)
+
+Any random string; the Vercel cron job / GitHub Action sends it as a `Bearer` token:
+
+```bash
+openssl rand -base64 24
+```
+
+Set the same value in `CRON_SECRET` (Vercel env var / GitHub repo secret).
+
+### 6. Supabase keys (only if using Supabase Auth)
+
+If you switch the database to Supabase (production), also copy from **Supabase → Project Settings → API**:
+
+- `NEXT_PUBLIC_SUPABASE_URL` — the project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — the `anon` `public` key
+- `SUPABASE_SERVICE_ROLE_KEY` — the `service_role` key (keep secret)
+
+> Note: this app uses **NextAuth** for sessions, not Supabase Auth, so these are only needed when the database itself is hosted on Supabase.
+
 ## 📁 Project Structure
 
 ```

@@ -11,6 +11,7 @@
 -- Extensions
 create extension if not exists "pgcrypto";   -- for gen_random_uuid()
 create extension if not exists "pg_cron";     -- scheduled jobs
+create extension if not exists "pg_net";      -- HTTP requests
 
 -- Allow the app's service_role (and postgres) to manage cron jobs.
 -- Without USAGE on the cron schema, calls from service_role fail with
@@ -77,6 +78,29 @@ create policy "dsa_problems readable by all" on public.dsa_problems
   for select using (true);
 
 -- ------------------------------------------------------------
+-- Configuration table for API settings (no superuser required)
+-- ------------------------------------------------------------
+create table if not exists public.app_config (
+  key text primary key,
+  value text not null,
+  updated_at timestamptz not null default now()
+);
+
+-- Insert default API base URL
+insert into public.app_config (key, value) 
+values ('api_base_url', 'https://daily-dsa-lld-reminder.vercel.app')
+on conflict (key) do nothing;
+
+-- Cron secret used to authenticate pg_cron -> API calls.
+-- IMPORTANT: set this to the SAME value as the app's CRON_SECRET env var, e.g.:
+--   update public.app_config set value = 'your-secret' where key = 'cron_secret';
+-- If left empty, the Authorization header is omitted (only works when the
+-- API's CRON_SECRET is also unset / not configured).
+insert into public.app_config (key, value)
+values ('cron_secret', '')
+on conflict (key) do nothing;
+
+-- ------------------------------------------------------------
 -- pg_cron scheduling
 -- Each user gets a dedicated cron job that fires at their
 -- reminder_time and calls our API endpoint for that user.
@@ -88,6 +112,29 @@ returns text
 language sql
 as $$
   select format('%s %s * * *', split_part(reminder_time, ':', 2), split_part(reminder_time, ':', 1));
+$$;
+
+-- Function: get API base URL from config table
+create or replace function public.get_api_base_url()
+returns text
+language sql
+security definer
+as $$
+  select coalesce(value, 'http://localhost:3000') 
+  from public.app_config 
+  where key = 'api_base_url';
+$$;
+
+-- Function: get cron secret from config table (used to authenticate the
+-- pg_cron -> API HTTP call via the Authorization: Bearer header).
+create or replace function public.get_cron_secret()
+returns text
+language sql
+security definer
+as $$
+  select coalesce(value, '') 
+  from public.app_config 
+  where key = 'cron_secret';
 $$;
 
 -- Function: (re)create a per-user cron job
@@ -106,24 +153,48 @@ set search_path = public, cron, pg_catalog
 as $function$
 declare
   v_reminder_time text;
+  v_timezone text;
   v_job_name text := 'send_reminder_' || p_user_id::text;
   v_schedule text;
   v_payload jsonb;
   v_endpoint text;
+  v_cron_secret text;
+  v_headers jsonb;
   v_command text;
+  v_utc_time text;
 begin
-  v_reminder_time := (
-    select u.reminder_time
+  select u.reminder_time, u.timezone
+    into v_reminder_time, v_timezone
     from public.dsa_users u
-    where u.id = p_user_id
-  );
+   where u.id = p_user_id;
+
   if v_reminder_time is null then
     return;
   end if;
 
-  v_schedule := public.cron_schedule_for(v_reminder_time);
-  v_endpoint := coalesce(current_setting('app.settings.api_base_url', true), 'http://localhost:3000');
+  -- Convert the user's LOCAL reminder_time to the equivalent UTC time,
+  -- because pg_cron schedules in the DB server's timezone (UTC). Without
+  -- this, a user in Asia/Kolkata with reminder_time '09:00' would fire at
+  -- 09:00 UTC = 14:30 IST instead of 09:00 IST.
+  begin
+    select to_char(
+      (current_date::timestamp + v_reminder_time::time)
+        at time zone v_timezone
+        at time zone 'UTC',
+      'HH24:MI'
+    ) into v_utc_time;
+  exception when others then
+    v_utc_time := v_reminder_time;
+  end;
+
+  if v_utc_time is null or v_utc_time = '' then
+    v_utc_time := v_reminder_time;
+  end if;
+
+  v_schedule := public.cron_schedule_for(v_utc_time);
+  v_endpoint := public.get_api_base_url();
   v_payload := jsonb_build_object('userId', p_user_id::text);
+  v_cron_secret := public.get_cron_secret();
 
   -- Remove any existing job for this user (ignore if it doesn't exist yet).
   -- cron.unschedule() raises XX000 "could not find valid entry for job"
@@ -134,13 +205,23 @@ begin
     null;
   end;
 
+  -- Build the request headers. net.http_post signature is
+  -- (url, body, params, headers, timeout) — headers is the 4th argument.
+  -- The previous version passed the headers object as `params` (3rd arg),
+  -- so Content-Type was never set and no Authorization was sent, causing
+  -- the API to reject the cron call with 401 Unauthorized.
+  v_headers := jsonb_build_object('Content-Type', 'application/json');
+  if v_cron_secret <> '' then
+    v_headers := v_headers || jsonb_build_object(
+      'Authorization', 'Bearer ' || v_cron_secret
+    );
+  end if;
+
   v_command := format(
-    'select supabase_functions.http_request(%L, %L, %L::jsonb, %L::jsonb, %L::jsonb)',
+    'select net.http_post(%L, %L::jsonb, NULL::jsonb, %L::jsonb)',
     v_endpoint || '/api/send-reminders',
-    'POST',
-    '{"Content-Type":"application/json"}',
-    v_payload::text,
-    '{}'
+    v_payload,
+    v_headers
   );
 
   perform cron.schedule(v_job_name, v_schedule, v_command);

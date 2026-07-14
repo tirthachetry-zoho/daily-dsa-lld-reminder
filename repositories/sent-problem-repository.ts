@@ -68,9 +68,12 @@ export class SentProblemRepository {
       .eq("user_id", userId)
       .gte("sent_at", todayStart.toISOString())
       .lte("sent_at", todayEnd.toISOString())
-      .maybeSingle();
+      .limit(1);
     if (error) throw error;
-    return data as SentProblemRow | null;
+    // A user can receive multiple problems in a day (DSA + system design),
+    // so we must not use .maybeSingle()/.single() here — that throws
+    // PGRST116 ("Results contain N rows") when more than one row matches.
+    return (data as SentProblemRow[])[0] ?? null;
   }
 
   async create(data: {

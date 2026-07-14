@@ -66,9 +66,9 @@ npm install
 Create a `.env` file in the root directory:
 
 ```env
-# Database
-DATABASE_URL="postgresql://user:password@localhost:5432/dsa_reminder"
-DIRECT_URL="postgresql://user:password@localhost:5432/dsa_reminder"
+# Database (Local PostgreSQL — adjust the role/host to your setup)
+DATABASE_URL="postgresql://tirtha@localhost:5432/dsa_reminder?schema=public"
+DIRECT_URL="postgresql://tirtha@localhost:5432/dsa_reminder?schema=public"
 
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL="your-supabase-url"

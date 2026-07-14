@@ -1,346 +1,434 @@
-export interface SystemDesignProblem {
+export interface SystemDesignProblemItem {
   title: string;
-  description: string;
-  primaryUrl: string;
+  difficulty?: "EASY" | "MEDIUM" | "HARD";
+  topic?: string;
+  companies?: string[];
+  leetcodeUrl?: string;
+  description?: string;
+  primaryUrl?: string;
   solutionUrl?: string;
   youtubeUrl?: string;
 }
 
-export const systemDesignProblems: SystemDesignProblem[] = [
+export const systemDesignProblems: SystemDesignProblemItem[] = [
   {
-    title: "Design a URL Shortener (TinyURL)",
-    description: "Design a service like TinyURL or bit.ly that shortens long URLs into short, unique aliases.",
-    primaryUrl: "https://leetcode.com/problems/encode-and-decode-tinyurl/",
-    solutionUrl: "https://leetcode.com/problems/encode-and-decode-tinyurl/solution/",
-    youtubeUrl: "https://www.youtube.com/watch?v=0s3TnO5T9wA",
+    "title": "Design a Parking Lot System",
+    "description": "Model a multi-level parking lot supporting different vehicle types, spot allocation strategy, and fee calculation.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/parkinglot",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=parking+lot+low+level+design"
   },
   {
-    title: "Design a Rate Limiter",
-    description: "Design a rate limiter that can limit the number of requests a user can make in a given time window.",
-    primaryUrl: "https://leetcode.com/problems/design-rate-limiter/",
-    solutionUrl: "https://leetcode.com/problems/design-rate-limiter/solution/",
-    youtubeUrl: "https://www.youtube.com/watch?v=4f2c6ZqJ-9k",
+    "title": "Design an Elevator System",
+    "description": "Design elevator scheduling for a single or multi-elevator building, handling requests, direction, and state.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/elevatorsystem",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=elevator+system+low+level+design"
   },
   {
-    title: "Design Twitter",
-    description: "Design a simplified version of Twitter that allows users to post tweets, follow/unfollow others, and see the 10 most recent tweets in their news feed.",
-    primaryUrl: "https://leetcode.com/problems/design-twitter/",
-    solutionUrl: "https://leetcode.com/problems/design-twitter/solution/",
-    youtubeUrl: "https://www.youtube.com/watch?v=pOU9ngD0XfY",
+    "title": "Design a Library Management System",
+    "description": "Model books, members, borrowing/returning, fines, and catalog search.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/librarymanagementsystem",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=library+management+system+low+level+design"
   },
   {
-    title: "Design Instagram",
-    description: "Design Instagram, a photo and video sharing social networking service with features like posting, liking, commenting, and following.",
-    primaryUrl: "https://www.systemdesign.one/instagram-system-design/",
-    solutionUrl: "https://www.systemdesign.one/instagram-system-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=7n8a0eY5Y8k",
+    "title": "Design a Chess Game",
+    "description": "Model the board, pieces, move validation, turns, check/checkmate detection.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/chess",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=chess+game+low+level+design"
   },
   {
-    title: "Design Facebook News Feed",
-    description: "Design the news feed system for Facebook that shows posts from friends in reverse chronological order, considering ranking and personalization.",
-    primaryUrl: "https://www.systemdesign.one/facebook-news-feed-system-design/",
-    solutionUrl: "https://www.systemdesign.one/facebook-news-feed-system-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=JlSEgJ1X0b8",
+    "title": "Design Tic Tac Toe",
+    "description": "Model a two-player grid game with win/draw detection; extend to an NxN board.",
+    "primaryUrl": "https://leetcode.com/problems/design-tic-tac-toe/",
+    "solutionUrl": "https://leetcode.com/problems/design-tic-tac-toe/solutions/",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=design+tic+tac+toe+leetcode"
   },
   {
-    title: "Design YouTube",
-    description: "Design YouTube, a video sharing platform that handles video upload, streaming, recommendations, comments, and likes.",
-    primaryUrl: "https://www.systemdesign.one/youtube-system-design/",
-    solutionUrl: "https://www.systemdesign.one/youtube-system-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=5iW7R1FQk5Y",
+    "title": "Design Snake and Ladder Game",
+    "description": "Model the board, dice roll, snakes/ladders, and multiplayer turn logic.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/snakeandladder",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=snake+and+ladder+low+level+design"
   },
   {
-    title: "Design Netflix",
-    description: "Design Netflix, a streaming service that handles video streaming, recommendations, and supports millions of concurrent users.",
-    primaryUrl: "https://www.systemdesign.one/netflix-system-design/",
-    solutionUrl: "https://www.systemdesign.one/netflix-system-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=p7hl4h1qw7Y",
+    "title": "Design an LRU Cache",
+    "description": "Implement O(1) get/put cache with least-recently-used eviction using a hashmap + doubly linked list.",
+    "primaryUrl": "https://leetcode.com/problems/lru-cache/",
+    "solutionUrl": "https://leetcode.com/problems/lru-cache/solutions/",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=lru+cache+design+leetcode"
   },
   {
-    title: "Design Uber",
-    description: "Design Uber, a ride-sharing platform that matches riders with drivers, handles real-time location tracking, and pricing.",
-    primaryUrl: "https://www.systemdesign.one/uber-system-design/",
-    solutionUrl: "https://www.systemdesign.one/uber-system-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=7YD8gNp5_6g",
+    "title": "Design a Rate Limiter",
+    "description": "Design token bucket / sliding window rate limiter for API throttling per client.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-system-design-resources",
+    "solutionUrl": "https://github.com/ashishps1/awesome-system-design-resources",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=rate+limiter+low+level+design"
   },
   {
-    title: "Design Airbnb",
-    description: "Design Airbnb, a vacation rental platform that handles property listings, bookings, payments, and reviews.",
-    primaryUrl: "https://www.systemdesign.one/airbnb-system-design/",
-    solutionUrl: "https://www.systemdesign.one/airbnb-system-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=3RlJ8F2Z5Yk",
+    "title": "Design a URL Shortener (TinyURL)",
+    "description": "Design a service like TinyURL or bit.ly that shortens long URLs into short, unique aliases.",
+    "primaryUrl": "https://leetcode.com/problems/encode-and-decode-tinyurl/",
+    "solutionUrl": "https://leetcode.com/problems/encode-and-decode-tinyurl/solutions/",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=design+tinyurl+low+level+design"
   },
   {
-    title: "Design a Chat System (WhatsApp)",
-    description: "Design a real-time chat system like WhatsApp that supports one-on-one and group messaging with end-to-end encryption.",
-    primaryUrl: "https://www.systemdesign.one/whatsapp-system-design/",
-    solutionUrl: "https://www.systemdesign.one/whatsapp-system-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=5Zs8R1FQk5Y",
+    "title": "Design a Movie Ticket Booking System (BookMyShow)",
+    "description": "Model theatres, shows, seat locking/booking, and payment flow with concurrency-safe seat selection.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/movieticketbookingsystem",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=bookmyshow+low+level+design"
   },
   {
-    title: "Design a Notification System",
-    description: "Design a notification system that can send push notifications, emails, and SMS to millions of users in real-time.",
-    primaryUrl: "https://www.systemdesign.one/notification-system-design/",
-    solutionUrl: "https://www.systemdesign.one/notification-system-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=6l8pJd1FQk5Y",
+    "title": "Design an ATM Machine",
+    "description": "Model card authentication, PIN validation, withdrawal, balance check, and cash dispensing states.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/atm",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=atm+machine+low+level+design"
   },
   {
-    title: "Design a File Storage System (Dropbox)",
-    description: "Design Dropbox, a file storage and synchronization service that handles file uploads, downloads, and sync across devices.",
-    primaryUrl: "https://www.systemdesign.one/dropbox-system-design/",
-    solutionUrl: "https://www.systemdesign.one/dropbox-system-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=7Zs8R1FQk5Y",
+    "title": "Design a Vending Machine",
+    "description": "Model inventory, coin/note insertion, item selection, change return using a state machine.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/vendingmachine",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=vending+machine+low+level+design"
   },
   {
-    title: "Design Google Search",
-    description: "Design Google Search, a web search engine that crawls, indexes, and ranks billions of web pages to provide relevant search results.",
-    primaryUrl: "https://www.systemdesign.one/google-search-system-design/",
-    solutionUrl: "https://www.systemdesign.one/google-search-system-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=8Zs8R1FQk5Y",
+    "title": "Design Splitwise (Expense Sharing App)",
+    "description": "Model users, groups, expenses, and simplify-debts algorithm to settle balances.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/splitwise",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=splitwise+low+level+design"
   },
   {
-    title: "Design Google Maps",
-    description: "Design Google Maps, a mapping service that provides real-time traffic, route planning, and location-based services.",
-    primaryUrl: "https://www.systemdesign.one/google-maps-system-design/",
-    solutionUrl: "https://www.systemdesign.one/google-maps-system-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=9Zs8R1FQk5Y",
+    "title": "Design an Uber / Ride-Sharing System",
+    "description": "Model riders, drivers, matching, pricing, and trip lifecycle.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/ridesharingservice",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=uber+low+level+design"
   },
   {
-    title: "Design Amazon",
-    description: "Design Amazon, an e-commerce platform that handles product listings, search, recommendations, shopping cart, and payments.",
-    primaryUrl: "https://www.systemdesign.one/amazon-system-design/",
-    solutionUrl: "https://www.systemdesign.one/amazon-system-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=0Zs8R1FQk5Y",
+    "title": "Design an E-commerce System (Amazon-lite)",
+    "description": "Model products, cart, orders, inventory, and checkout flow.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/onlineshoppingsystem",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=ecommerce+low+level+design"
   },
   {
-    title: "Design a Key-Value Store (Redis)",
-    description: "Design a distributed key-value store like Redis that supports high throughput, low latency, and various data structures.",
-    primaryUrl: "https://www.systemdesign.one/key-value-store-design/",
-    solutionUrl: "https://www.systemdesign.one/key-value-store-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=1Zs8R1FQk5Y",
+    "title": "Design a Food Delivery App (Swiggy/Zomato)",
+    "description": "Model restaurants, menus, orders, delivery partner assignment, and order tracking.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=food+delivery+app+low+level+design"
   },
   {
-    title: "Design a Distributed SQL Database",
-    description: "Design a distributed SQL database that provides ACID guarantees, horizontal scalability, and high availability.",
-    primaryUrl: "https://www.systemdesign.one/distributed-database-design/",
-    solutionUrl: "https://www.systemdesign.one/distributed-database-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=2Zs8R1FQk5Y",
+    "title": "Design a Hotel Booking System",
+    "description": "Model hotels, room types, availability, reservations, and cancellation policy.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/hotelbookingsystem",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=hotel+booking+system+low+level+design"
   },
   {
-    title: "Design a Unique ID Generator",
-    description: "Design a system that generates unique IDs across distributed systems, similar to Twitter's Snowflake ID generation.",
-    primaryUrl: "https://www.systemdesign.one/unique-id-generator/",
-    solutionUrl: "https://www.systemdesign.one/unique-id-generator/",
-    youtubeUrl: "https://www.youtube.com/watch?v=3Zs8R1FQk5Y",
+    "title": "Design a Restaurant Management System",
+    "description": "Model tables, reservations, orders, kitchen queue, and billing.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/restaurantmanagementsystem",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=restaurant+management+system+low+level+design"
   },
   {
-    title: "Design a Caching System",
-    description: "Design a distributed caching system like Memcached or Redis that reduces database load and improves response times.",
-    primaryUrl: "https://www.systemdesign.one/caching-system-design/",
-    solutionUrl: "https://www.systemdesign.one/caching-system-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=4Zs8R1FQk5Y",
+    "title": "Design an Airline Management System",
+    "description": "Model flights, seat classes, bookings, and cancellation/refund workflow.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/airlinemanagementsystem",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=airline+management+system+low+level+design"
   },
   {
-    title: "Design a Load Balancer",
-    description: "Design a load balancer that distributes incoming traffic across multiple servers to ensure high availability and scalability.",
-    primaryUrl: "https://www.systemdesign.one/load-balancer-design/",
-    solutionUrl: "https://www.systemdesign.one/load-balancer-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=5Zs8R1FQk5Y",
+    "title": "Design a Car Rental System",
+    "description": "Model vehicle inventory, reservations, pricing tiers, and return/damage handling.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/carrentalsystem",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=car+rental+system+low+level+design"
   },
   {
-    title: "Design a Message Queue",
-    description: "Design a distributed message queue like Kafka or RabbitMQ that enables asynchronous communication between services.",
-    primaryUrl: "https://www.systemdesign.one/message-queue-design/",
-    solutionUrl: "https://www.systemdesign.one/message-queue-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=6Zs8R1FQk5Y",
+    "title": "Design a Logging Framework",
+    "description": "Design a pluggable logger supporting log levels, multiple sinks (file/console), and formatting (Chain of Responsibility / Strategy patterns).",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/loggingframework",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=logging+framework+low+level+design"
   },
   {
-    title: "Design a Web Crawler",
-    description: "Design a web crawler that systematically browses the web to index web pages for search engines.",
-    primaryUrl: "https://www.systemdesign.one/web-crawler-design/",
-    solutionUrl: "https://www.systemdesign.one/web-crawler-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=7Zs8R1FQk5Y",
+    "title": "Design a Notification System",
+    "description": "Design a multi-channel (SMS/email/push) notification service using Observer pattern and templates.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/notificationservice",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=notification+system+low+level+design"
   },
   {
-    title: "Design a Recommendation System",
-    description: "Design a recommendation system like Netflix or Amazon that suggests personalized content to users based on their preferences.",
-    primaryUrl: "https://www.systemdesign.one/recommendation-system-design/",
-    solutionUrl: "https://www.systemdesign.one/recommendation-system-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=8Zs8R1FQk5Y",
+    "title": "Design a Chat Application (WhatsApp)",
+    "description": "Model users, one-to-one and group messaging, message status, and delivery.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/chatapplication",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=whatsapp+low+level+design"
   },
   {
-    title: "Design a Real-time Analytics System",
-    description: "Design a real-time analytics system that processes and analyzes streaming data to provide insights with low latency.",
-    primaryUrl: "https://www.systemdesign.one/real-time-analytics-design/",
-    solutionUrl: "https://www.systemdesign.one/real-time-analytics-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=9Zs8R1FQk5Y",
+    "title": "Design an In-Memory File System",
+    "description": "Support mkdir, addContentToFile, readContentFromFile, and ls using a trie/tree structure.",
+    "primaryUrl": "https://leetcode.com/problems/design-in-memory-file-system/",
+    "solutionUrl": "https://leetcode.com/problems/design-in-memory-file-system/solutions/",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=design+in+memory+file+system+leetcode"
   },
   {
-    title: "Design a Logging System",
-    description: "Design a centralized logging system that collects, stores, and analyzes logs from multiple services.",
-    primaryUrl: "https://www.systemdesign.one/logging-system-design/",
-    solutionUrl: "https://www.systemdesign.one/logging-system-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=0As8R1FQk5Y",
+    "title": "Design an In-Memory Key-Value Store",
+    "description": "Design a Redis-like store supporting get/set/expire with TTL eviction.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=in+memory+key+value+store+design"
   },
   {
-    title: "Design a Monitoring System",
-    description: "Design a monitoring system that tracks the health and performance of distributed systems and alerts on anomalies.",
-    primaryUrl: "https://www.systemdesign.one/monitoring-system-design/",
-    solutionUrl: "https://www.systemdesign.one/monitoring-system-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=1As8R1FQk5Y",
+    "title": "Design a Text Editor with Undo/Redo",
+    "description": "Model text buffer operations with Command pattern to support undo/redo stacks.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=text+editor+undo+redo+design"
   },
   {
-    title: "Design a Distributed File System",
-    description: "Design a distributed file system like HDFS or GFS that stores large files across multiple machines with fault tolerance.",
-    primaryUrl: "https://www.systemdesign.one/distributed-file-system-design/",
-    solutionUrl: "https://www.systemdesign.one/distributed-file-system-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=2As8R1FQk5Y",
+    "title": "Design a Cache with Multiple Eviction Policies",
+    "description": "Design a cache supporting pluggable eviction strategies (LRU, LFU, FIFO) via Strategy pattern.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=cache+eviction+policy+low+level+design"
   },
   {
-    title: "Design a Content Delivery Network (CDN)",
-    description: "Design a CDN that delivers content to users from servers located closer to them to reduce latency.",
-    primaryUrl: "https://www.systemdesign.one/cdn-design/",
-    solutionUrl: "https://www.systemdesign.one/cdn-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=3As8R1FQk5Y",
+    "title": "Design a Traffic Signal Control System",
+    "description": "Model intersection signals, timing cycles, and pedestrian/emergency overrides.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=traffic+signal+control+system+design"
   },
   {
-    title: "Design a Payment System",
-    description: "Design a payment processing system like Stripe that handles transactions, fraud detection, and reconciliation.",
-    primaryUrl: "https://www.systemdesign.one/payment-system-design/",
-    solutionUrl: "https://www.systemdesign.one/payment-system-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=4As8R1FQk5Y",
+    "title": "Design an Elevator Scheduling Algorithm",
+    "description": "Extend basic elevator design to optimize request scheduling across multiple cars (SCAN/LOOK algorithms).",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/elevatorsystem",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=elevator+scheduling+algorithm+design"
   },
   {
-    title: "Design an Online Stock Trading System",
-    description: "Design an online stock trading platform that handles order placement, matching, execution, and real-time market data.",
-    primaryUrl: "https://www.systemdesign.one/stock-trading-system-design/",
-    solutionUrl: "https://www.systemdesign.one/stock-trading-system-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=5As8R1FQk5Y",
+    "title": "Design a Meeting Scheduler / Calendar App",
+    "description": "Model events, attendees, availability checking, and conflict detection.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=meeting+scheduler+calendar+low+level+design"
   },
   {
-    title: "Design a Ticket Booking System",
-    description: "Design a ticket booking system for events like movies or concerts that handles seat selection, booking, and payment.",
-    primaryUrl: "https://www.systemdesign.one/ticket-booking-system-design/",
-    solutionUrl: "https://www.systemdesign.one/ticket-booking-system-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=6As8R1FQk5Y",
+    "title": "Design a Task Scheduler / Job Scheduler",
+    "description": "Design a cron-like job scheduler supporting recurring jobs, priorities, and retries.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=job+scheduler+low+level+design"
   },
   {
-    title: "Design a Social Graph",
-    description: "Design a social graph system that represents relationships between users and supports queries like friends of friends.",
-    primaryUrl: "https://www.systemdesign.one/social-graph-design/",
-    solutionUrl: "https://www.systemdesign.one/social-graph-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=7As8R1FQk5Y",
+    "title": "Design an Online Auction System",
+    "description": "Model auctions, bids, bid validation, and auto-close/winner determination.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=online+auction+system+low+level+design"
   },
   {
-    title: "Design a Geolocation Service",
-    description: "Design a geolocation service that can find nearby points of interest, calculate distances, and handle spatial queries.",
-    primaryUrl: "https://www.systemdesign.one/geolocation-service-design/",
-    solutionUrl: "https://www.systemdesign.one/geolocation-service-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=8As8R1FQk5Y",
+    "title": "Design a Stock Exchange / Trading System",
+    "description": "Model order book, buy/sell matching engine, and trade execution.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/stockexchange",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=stock+exchange+order+matching+low+level+design"
   },
   {
-    title: "Design a Search Autocomplete System",
-    description: "Design an autocomplete system that suggests search queries as users type, considering popularity and personalization.",
-    primaryUrl: "https://www.systemdesign.one/autocomplete-system-design/",
-    solutionUrl: "https://www.systemdesign.one/autocomplete-system-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=9As8R1FQk5Y",
+    "title": "Design an ATM Cash Dispenser (Denomination Logic)",
+    "description": "Design the algorithm and class structure for dispensing minimum notes/coins for a withdrawal amount.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/atm",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=cash+dispenser+denomination+design"
   },
   {
-    title: "Design a Consistent Hashing System",
-    description: "Design a consistent hashing system for distributed caching that minimizes data movement when nodes are added or removed.",
-    primaryUrl: "https://www.systemdesign.one/consistent-hashing-design/",
-    solutionUrl: "https://www.systemdesign.one/consistent-hashing-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=0Bs8R1FQk5Y",
+    "title": "Design a Coffee Vending Machine",
+    "description": "Model recipes, ingredient inventory, and a state machine for beverage preparation.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/vendingmachine",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=coffee+vending+machine+low+level+design"
   },
   {
-    title: "Design a Leader Election System",
-    description: "Design a leader election system for distributed systems that elects a coordinator among a set of nodes.",
-    primaryUrl: "https://www.systemdesign.one/leader-election-design/",
-    solutionUrl: "https://www.systemdesign.one/leader-election-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=1Bs8R1FQk5Y",
+    "title": "Design a Blackjack Card Game",
+    "description": "Model deck, dealer/player hands, hit/stand logic, and scoring rules.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=blackjack+card+game+low+level+design"
   },
   {
-    title: "Design a Distributed Lock Service",
-    description: "Design a distributed lock service that provides mutual exclusion across distributed systems.",
-    primaryUrl: "https://www.systemdesign.one/distributed-lock-design/",
-    solutionUrl: "https://www.systemdesign.one/distributed-lock-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=2Bs8R1FQk5Y",
+    "title": "Design a Generic Deck of Cards",
+    "description": "Model a reusable Card/Deck/Shuffle abstraction usable across multiple card games.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=deck+of+cards+low+level+design"
   },
   {
-    title: "Design a Database Sharding System",
-    description: "Design a database sharding system that horizontally partitions data across multiple database instances.",
-    primaryUrl: "https://www.systemdesign.one/database-sharding-design/",
-    solutionUrl: "https://www.systemdesign.one/database-sharding-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=3Bs8R1FQk5Y",
+    "title": "Design Tic-Tac-Toe with a Simple AI Opponent",
+    "description": "Extend Tic-Tac-Toe with a minimax-based computer player.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=tic+tac+toe+minimax+design"
   },
   {
-    title: "Design a Database Replication System",
-    description: "Design a database replication system that replicates data across multiple nodes for high availability and read scalability.",
-    primaryUrl: "https://www.systemdesign.one/database-replication-design/",
-    solutionUrl: "https://www.systemdesign.one/database-replication-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=4Bs8R1FQk5Y",
+    "title": "Design a Library Book Reservation & Hold System",
+    "description": "Extend library system with reservation queues and hold-expiry notifications.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/librarymanagementsystem",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=library+reservation+system+low+level+design"
   },
   {
-    title: "Design a CAP Theorem System",
-    description: "Design a system that makes trade-offs between Consistency, Availability, and Partition Tolerance based on requirements.",
-    primaryUrl: "https://www.systemdesign.one/cap-theorem-design/",
-    solutionUrl: "https://www.systemdesign.one/cap-theorem-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=5Bs8R1FQk5Y",
+    "title": "Design an Airport / Flight Booking System",
+    "description": "Model airports, flights, seat inventory, and multi-leg itinerary booking.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/airlinemanagementsystem",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=flight+booking+system+low+level+design"
   },
   {
-    title: "Design a Two-Phase Commit System",
-    description: "Design a two-phase commit protocol for distributed transactions to ensure atomicity across multiple databases.",
-    primaryUrl: "https://www.systemdesign.one/two-phase-commit-design/",
-    solutionUrl: "https://www.systemdesign.one/two-phase-commit-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=6Bs8R1FQk5Y",
+    "title": "Design a School / University Management System",
+    "description": "Model students, courses, enrollment, grading, and faculty assignment.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=school+management+system+low+level+design"
   },
   {
-    title: "Design a Paxos Consensus System",
-    description: "Design a Paxos-based consensus system that achieves agreement in distributed systems despite failures.",
-    primaryUrl: "https://www.systemdesign.one/paxos-consensus-design/",
-    solutionUrl: "https://www.systemdesign.one/paxos-consensus-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=7Bs8R1FQk5Y",
+    "title": "Design an Inventory Management System",
+    "description": "Model warehouses, SKUs, stock levels, reordering thresholds, and audit logs.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=inventory+management+system+low+level+design"
   },
   {
-    title: "Design a Raft Consensus System",
-    description: "Design a Raft-based consensus system that provides a simpler alternative to Paxos for distributed consensus.",
-    primaryUrl: "https://www.systemdesign.one/raft-consensus-design/",
-    solutionUrl: "https://www.systemdesign.one/raft-consensus-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=8Bs8R1FQk5Y",
+    "title": "Design a Shopping Cart System",
+    "description": "Model cart operations, quantity updates, coupon application, and price recalculation.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/onlineshoppingsystem",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=shopping+cart+low+level+design"
   },
   {
-    title: "Design a Service Discovery System",
-    description: "Design a service discovery system that allows services to find and communicate with each other dynamically.",
-    primaryUrl: "https://www.systemdesign.one/service-discovery-design/",
-    solutionUrl: "https://www.systemdesign.one/service-discovery-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=9Bs8R1FQk5Y",
+    "title": "Design a Payment Gateway / Digital Wallet",
+    "description": "Model payment methods, transaction lifecycle, idempotency, and rollback on failure.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=payment+gateway+wallet+low+level+design"
   },
   {
-    title: "Design an API Gateway",
-    description: "Design an API gateway that acts as a single entry point for all client requests, handling routing, authentication, and rate limiting.",
-    primaryUrl: "https://www.systemdesign.one/api-gateway-design/",
-    solutionUrl: "https://www.systemdesign.one/api-gateway-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=0Cs8R1FQk5Y",
+    "title": "Design a Social Media News Feed",
+    "description": "Model posts, followers, feed generation (pull vs push), and ranking.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=news+feed+system+low+level+design"
   },
   {
-    title: "Design a Microservices Architecture",
-    description: "Design a microservices architecture that breaks down a monolithic application into smaller, independent services.",
-    primaryUrl: "https://www.systemdesign.one/microservices-architecture-design/",
-    solutionUrl: "https://www.systemdesign.one/microservices-architecture-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=1Cs8R1FQk5Y",
+    "title": "Design Twitter (LLD)",
+    "description": "Model tweets, follow graph, timeline generation, and like/retweet actions.",
+    "primaryUrl": "https://leetcode.com/problems/design-twitter/",
+    "solutionUrl": "https://leetcode.com/problems/design-twitter/solutions/",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=design+twitter+low+level+design"
   },
   {
-    title: "Design a Serverless System",
-    description: "Design a serverless system that runs code in response to events without managing servers.",
-    primaryUrl: "https://www.systemdesign.one/serverless-design/",
-    solutionUrl: "https://www.systemdesign.one/serverless-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=2Cs8R1FQk5Y",
+    "title": "Design Instagram (LLD)",
+    "description": "Model users, posts, stories, follow relationships, and feed ranking.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=design+instagram+low+level+design"
   },
   {
-    title: "Design a Blockchain System",
-    description: "Design a blockchain system that maintains a distributed ledger of transactions with consensus and immutability.",
-    primaryUrl: "https://www.systemdesign.one/blockchain-design/",
-    solutionUrl: "https://www.systemdesign.one/blockchain-design/",
-    youtubeUrl: "https://www.youtube.com/watch?v=3Cs8R1FQk5Y",
+    "title": "Design a Rate Limiter (Token Bucket vs Sliding Window)",
+    "description": "Compare and implement token bucket, leaky bucket, and sliding-window-log rate limiting strategies.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-system-design-resources",
+    "solutionUrl": "https://github.com/ashishps1/awesome-system-design-resources",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=token+bucket+rate+limiter+design"
   },
+  {
+    "title": "Design a Circuit Breaker",
+    "description": "Model open/half-open/closed states to protect a system from cascading failures.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=circuit+breaker+pattern+low+level+design"
+  },
+  {
+    "title": "Design a Pub-Sub System",
+    "description": "Model publishers, subscribers, topics, and message delivery guarantees.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=pub+sub+system+low+level+design"
+  },
+  {
+    "title": "Design an Event Booking / Ticketing System",
+    "description": "Model events, venues, ticket tiers, and concurrent booking with seat/inventory locks.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/movieticketbookingsystem",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=event+ticketing+system+low+level+design"
+  },
+  {
+    "title": "Design a Cricket / Match Scoring System",
+    "description": "Model innings, overs, balls, player stats, and live score updates.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=cricket+scoring+system+low+level+design"
+  },
+  {
+    "title": "Design a Voting / Polling System",
+    "description": "Model polls, options, one-vote-per-user enforcement, and real-time result tallying.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=voting+polling+system+low+level+design"
+  },
+  {
+    "title": "Design a Digital Wallet with Ledger",
+    "description": "Model wallet balance, transaction ledger, and double-entry consistency across transfers.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=digital+wallet+ledger+low+level+design"
+  },
+  {
+    "title": "Design a Ride-Fare Calculator",
+    "description": "Model base fare, distance/time surcharges, and dynamic (surge) pricing rules.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/ridesharingservice",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=ride+fare+calculator+low+level+design"
+  },
+  {
+    "title": "Design a Multiplayer Game Lobby / Matchmaking System",
+    "description": "Model rooms, player queueing, skill-based matchmaking, and lobby lifecycle.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=matchmaking+system+low+level+design"
+  },
+  {
+    "title": "Design an Elevator System with Multiple Cars",
+    "description": "Extend elevator design to dispatch among multiple cars for optimal wait time.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design/tree/main/solutions/java/src/main/java/elevatorsystem",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=multiple+elevator+cars+dispatch+design"
+  },
+  {
+    "title": "Design a Content Management System (CMS)",
+    "description": "Model content types, versioning, publishing workflow, and role-based access.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=content+management+system+low+level+design"
+  },
+  {
+    "title": "Design a Grocery Store Billing / POS System",
+    "description": "Model products, barcode scanning, discounts/coupons, tax rules, and receipt generation.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=pos+billing+system+low+level+design"
+  },
+  {
+    "title": "Design a Distributed Unique ID Generator (Snowflake-style)",
+    "description": "Design a class that generates unique, roughly-sortable IDs across multiple nodes without central coordination.",
+    "primaryUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "solutionUrl": "https://github.com/ashishps1/awesome-low-level-design",
+    "youtubeUrl": "https://www.youtube.com/results?search_query=snowflake+unique+id+generator+design"
+  }
 ];

@@ -24,6 +24,14 @@ async function main() {
 
   console.log("🌱 Seeding problems...");
 
+  // Remove existing problems so the catalog is fully replaced (no stale entries).
+  const { error: delErr } = await supabase.from("dsa_problems").delete().neq("id", "__never__");
+  if (delErr) {
+    console.error("Failed to clear existing problems:", delErr.message);
+  } else {
+    console.log("🧹 Cleared existing problems.");
+  }
+
   // Upsert DSA problems
   for (const problem of dsaProblems) {
     const { error } = await supabase.from("dsa_problems").upsert(

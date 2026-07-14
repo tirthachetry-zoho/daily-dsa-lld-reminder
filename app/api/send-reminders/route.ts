@@ -7,14 +7,14 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
   try {
-    // Verify the request is from GitHub Actions (optional security check)
+    // Verify the request is from GitHub Actions / Vercel cron (optional security check)
     const authHeader = request.headers.get("authorization");
     if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const now = new Date();
-    
+
     // Get all active users
     const users = await prisma.user.findMany({
       where: { isActive: true },
@@ -33,155 +33,148 @@ export async function POST(request: Request) {
       results.processed++;
 
       try {
-        // Convert user's reminder time to UTC
-        const [hours, minutes] = user.reminderTime.split(":").map(Number);
-        const userTime = toZonedTime(now, user.timezone);
-        const userHour = userTime.getHours();
-        const userMinute = userTime.getMinutes();
+        // On Vercel Hobby the cron runs once per day, so we send to every
+        // active user whose reminder is due today (guarded by "already sent
+        // today" below). The per-user reminderTime is still stored for
+        // reference / local hourly runs via `npm run send-reminders`.
+        console.log(`Processing user ${user.email}`);
 
-        // Check if it's the user's reminder time (within the same hour)
-        if (userHour === hours && userMinute >= 0 && userMinute < 60) {
-          console.log(`Processing user ${user.email} at their reminder time`);
+        // Check if already sent today
+        const todayStart = new Date(now);
+        todayStart.setHours(0, 0, 0, 0);
+        const todayEnd = new Date(now);
+        todayEnd.setHours(23, 59, 59, 999);
 
-          // Check if already sent today
-          const todayStart = new Date(now);
-          todayStart.setHours(0, 0, 0, 0);
-          const todayEnd = new Date(now);
-          todayEnd.setHours(23, 59, 59, 999);
-
-          const alreadySentToday = await prisma.sentProblem.findFirst({
-            where: {
-              userId: user.id,
-              sentAt: {
-                gte: todayStart,
-                lte: todayEnd,
-              },
+        const alreadySentToday = await prisma.sentProblem.findFirst({
+          where: {
+            userId: user.id,
+            sentAt: {
+              gte: todayStart,
+              lte: todayEnd,
             },
-          });
+          },
+        });
 
-          if (alreadySentToday) {
-            console.log(`Skipping ${user.email} - already sent today`);
-            results.skipped++;
-            continue;
-          }
+        if (alreadySentToday) {
+          console.log(`Skipping ${user.email} - already sent today`);
+          results.skipped++;
+          continue;
+        }
 
-          // Get next unseen DSA problem (random selection)
-          const sentProblemIds = await prisma.sentProblem
+        // Get next unseen DSA problem (random selection)
+        const sentProblemIds = await prisma.sentProblem
+          .findMany({
+            where: { userId: user.id },
+            select: { problemId: true },
+          })
+          .then((sent) => sent.map((s) => s.problemId));
+
+        const unseenDsaIds = await prisma.problem
+          .findMany({
+            where: {
+              type: "DSA",
+              id: { notIn: sentProblemIds.length > 0 ? sentProblemIds : undefined },
+            },
+            select: { id: true },
+          })
+          .then((rows) => rows.map((r) => r.id));
+
+        const pickRandomId = (ids: string[]): string | null =>
+          ids.length > 0 ? ids[Math.floor(Math.random() * ids.length)] : null;
+
+        const dsaProblemId =
+          pickRandomId(unseenDsaIds) ||
+          (await prisma.problem
+            .findMany({ where: { type: "DSA" }, select: { id: true } })
+            .then((rows) => pickRandomId(rows.map((r) => r.id))));
+
+        const finalDsaProblem = dsaProblemId
+          ? await prisma.problem.findUnique({ where: { id: dsaProblemId } })
+          : null;
+
+        if (!finalDsaProblem) {
+          console.log(`No DSA problems available for ${user.email}`);
+          results.errors++;
+          continue;
+        }
+
+        // Check if System Design problem should be included
+        let systemDesignProblem = null;
+        const userSentProblems = await prisma.sentProblem.findMany({
+          where: {
+            userId: user.id,
+            problem: { type: "SYSTEM_DESIGN" },
+          },
+          orderBy: { sentAt: "desc" },
+          take: 1,
+        });
+
+        const shouldSendSystemDesign =
+          userSentProblems.length === 0 ||
+          daysBetween(userSentProblems[0].sentAt, now) >= user.systemDesignFrequency;
+
+        if (shouldSendSystemDesign) {
+          const sentSystemDesignIds = await prisma.sentProblem
             .findMany({
-              where: { userId: user.id },
+              where: {
+                userId: user.id,
+                problem: { type: "SYSTEM_DESIGN" },
+              },
               select: { problemId: true },
             })
             .then((sent) => sent.map((s) => s.problemId));
 
-          const unseenDsaIds = await prisma.problem
+          const unseenSdIds = await prisma.problem
             .findMany({
               where: {
-                type: "DSA",
-                id: { notIn: sentProblemIds.length > 0 ? sentProblemIds : undefined },
+                type: "SYSTEM_DESIGN",
+                id: { notIn: sentSystemDesignIds.length > 0 ? sentSystemDesignIds : undefined },
               },
               select: { id: true },
             })
             .then((rows) => rows.map((r) => r.id));
 
-          const pickRandomId = (ids: string[]): string | null =>
-            ids.length > 0 ? ids[Math.floor(Math.random() * ids.length)] : null;
-
-          const dsaProblemId =
-            pickRandomId(unseenDsaIds) ||
+          const sdProblemId =
+            pickRandomId(unseenSdIds) ||
             (await prisma.problem
-              .findMany({ where: { type: "DSA" }, select: { id: true } })
+              .findMany({ where: { type: "SYSTEM_DESIGN" }, select: { id: true } })
               .then((rows) => pickRandomId(rows.map((r) => r.id))));
 
-          const finalDsaProblem = dsaProblemId
-            ? await prisma.problem.findUnique({ where: { id: dsaProblemId } })
+          systemDesignProblem = sdProblemId
+            ? await prisma.problem.findUnique({ where: { id: sdProblemId } })
             : null;
+        }
 
-          if (!finalDsaProblem) {
-            console.log(`No DSA problems available for ${user.email}`);
-            results.errors++;
-            continue;
-          }
+        // Send email
+        const emailHtml = generateEmailHtml(finalDsaProblem, systemDesignProblem);
 
-          // Check if System Design problem should be included
-          let systemDesignProblem = null;
-          const userSentProblems = await prisma.sentProblem.findMany({
-            where: {
-              userId: user.id,
-              problem: { type: "SYSTEM_DESIGN" },
-            },
-            orderBy: { sentAt: "desc" },
-            take: 1,
-          });
+        await resend.emails.send({
+          from: process.env.EMAIL_FROM || "noreply@dsareminder.com",
+          to: user.email,
+          subject: `🚀 Daily Coding Reminder - ${finalDsaProblem.title}`,
+          html: emailHtml,
+        });
 
-          const shouldSendSystemDesign =
-            userSentProblems.length === 0 ||
-            daysBetween(userSentProblems[0].sentAt, now) >= user.systemDesignFrequency;
+        // Save DSA problem as sent
+        await prisma.sentProblem.create({
+          data: {
+            userId: user.id,
+            problemId: finalDsaProblem.id,
+          },
+        });
 
-          if (shouldSendSystemDesign) {
-            const sentSystemDesignIds = await prisma.sentProblem
-              .findMany({
-                where: {
-                  userId: user.id,
-                  problem: { type: "SYSTEM_DESIGN" },
-                },
-                select: { problemId: true },
-              })
-              .then((sent) => sent.map((s) => s.problemId));
-
-            const unseenSdIds = await prisma.problem
-              .findMany({
-                where: {
-                  type: "SYSTEM_DESIGN",
-                  id: { notIn: sentSystemDesignIds.length > 0 ? sentSystemDesignIds : undefined },
-                },
-                select: { id: true },
-              })
-              .then((rows) => rows.map((r) => r.id));
-
-            const sdProblemId =
-              pickRandomId(unseenSdIds) ||
-              (await prisma.problem
-                .findMany({ where: { type: "SYSTEM_DESIGN" }, select: { id: true } })
-                .then((rows) => pickRandomId(rows.map((r) => r.id))));
-
-            systemDesignProblem = sdProblemId
-              ? await prisma.problem.findUnique({ where: { id: sdProblemId } })
-              : null;
-          }
-
-          // Send email
-          const emailHtml = generateEmailHtml(finalDsaProblem, systemDesignProblem);
-          
-          await resend.emails.send({
-            from: process.env.EMAIL_FROM || "noreply@dsareminder.com",
-            to: user.email,
-            subject: `🚀 Daily Coding Reminder - ${finalDsaProblem.title}`,
-            html: emailHtml,
-          });
-
-          // Save DSA problem as sent
+        // Save System Design problem as sent if included
+        if (systemDesignProblem) {
           await prisma.sentProblem.create({
             data: {
               userId: user.id,
-              problemId: finalDsaProblem.id,
+              problemId: systemDesignProblem.id,
             },
           });
-
-          // Save System Design problem as sent if included
-          if (systemDesignProblem) {
-            await prisma.sentProblem.create({
-              data: {
-                userId: user.id,
-                problemId: systemDesignProblem.id,
-              },
-            });
-          }
-
-          console.log(`Successfully sent reminder to ${user.email}`);
-          results.sent++;
-        } else {
-          results.skipped++;
         }
+
+        console.log(`Successfully sent reminder to ${user.email}`);
+        results.sent++;
       } catch (error) {
         console.error(`Error processing user ${user.email}:`, error);
         results.errors++;

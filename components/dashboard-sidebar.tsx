@@ -11,10 +11,12 @@ import {
   LogOut,
   Menu,
   X,
+  Home,
 } from "lucide-react";
 import { useState } from "react";
 
 const navigation = [
+  { name: "Home", href: "/", icon: Home },
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "History", href: "/dashboard/history", icon: History },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },

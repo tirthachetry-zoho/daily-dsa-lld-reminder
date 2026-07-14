@@ -176,6 +176,14 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
+          <div className="flex justify-start mb-2">
+            <Link
+              href="/"
+              className="inline-flex items-center text-sm text-blue-600 hover:underline"
+            >
+              ← Home
+            </Link>
+          </div>
           <CardTitle className="text-3xl">Get Started</CardTitle>
           <CardDescription>
             Enter your email and we'll set up daily DSA reminders

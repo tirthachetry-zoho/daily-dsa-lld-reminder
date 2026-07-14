@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export const metadata = {
   title: "Terms of Service · DSA Reminder",
 };
@@ -6,6 +8,12 @@ export default function TermsPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-2xl mx-auto bg-white rounded-lg shadow p-8">
+        <Link
+          href="/"
+          className="inline-flex items-center text-sm text-blue-600 hover:underline mb-4"
+        >
+          ← Home
+        </Link>
         <h1 className="text-3xl font-bold text-blue-600 mb-2">Terms of Service</h1>
         <p className="text-sm text-gray-500 mb-6">Last updated: 2026</p>
 

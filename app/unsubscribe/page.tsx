@@ -41,6 +41,12 @@ function UnsubscribeContent() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow p-8 text-center">
+        <Link
+          href="/"
+          className="inline-flex items-center text-sm text-blue-600 hover:underline mb-4"
+        >
+          ← Home
+        </Link>
         <h1 className="text-2xl font-bold text-blue-600 mb-4">DSA Reminder</h1>
         {status === "loading" && (
           <p className="text-gray-600">Processing your request…</p>

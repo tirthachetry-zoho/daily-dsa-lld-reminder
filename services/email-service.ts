@@ -9,7 +9,7 @@ export class EmailService {
     dsaProblem: ProblemRow,
     systemDesignProblem: ProblemRow | null
   ): Promise<void> {
-    const emailHtml = this.generateEmailHtml(dsaProblem, systemDesignProblem);
+    const emailHtml = this.generateEmailHtml(to, dsaProblem, systemDesignProblem);
 
     await resend.emails.send({
       from: process.env.EMAIL_FROM || "noreply@dsareminder.com",
@@ -20,6 +20,7 @@ export class EmailService {
   }
 
   private generateEmailHtml(
+    to: string,
     dsaProblem: ProblemRow,
     systemDesignProblem: ProblemRow | null
   ): string {
@@ -34,6 +35,13 @@ export class EmailService {
       MEDIUM: "#854d0e",
       HARD: "#991b1b",
     };
+
+    const unsubscribeUrl = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/unsubscribe?email=${encodeURIComponent(to)}`;
+    const year = 2026;
+    const authorName = "Tirtha";
+    const authorLinkedIn = "https://www.linkedin.com/in/tirthachetry/";
+    const privacyUrl = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/privacy`;
+    const termsUrl = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/terms`;
 
     return `
       <!DOCTYPE html>
@@ -90,6 +98,17 @@ export class EmailService {
         <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e5e7eb;">
           <p style="color: #666;">Happy Coding! 🎉</p>
           <p style="font-size: 12px; color: #999; margin-top: 10px;">You received this email because you subscribed to DSA Reminder.</p>
+          <p style="font-size: 12px; color: #999; margin-top: 8px;">
+            <a href="${unsubscribeUrl}" style="color: #2563eb; text-decoration: underline;">Unsubscribe</a>
+            &nbsp;·&nbsp;
+            <a href="${privacyUrl}" style="color: #2563eb; text-decoration: underline;">Privacy Policy</a>
+            &nbsp;·&nbsp;
+            <a href="${termsUrl}" style="color: #2563eb; text-decoration: underline;">Terms of Service</a>
+          </p>
+          <p style="font-size: 12px; color: #999; margin-top: 10px;">
+            © ${year} DSA Reminder · Built by
+            <a href="${authorLinkedIn}" style="color: #2563eb; text-decoration: underline;">${authorName}</a>
+          </p>
         </div>
       </body>
       </html>

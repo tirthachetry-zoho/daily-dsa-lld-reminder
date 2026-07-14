@@ -29,7 +29,7 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState({
     email: "",
     reminderTime: "09:00",
-    timezone: "UTC",
+    timezone: "Asia/Kolkata",
     frequencyDays: 1,
     systemDesignFrequency: 3,
     isActive: true,

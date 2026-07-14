@@ -255,6 +255,16 @@ export default function Home() {
                 </p>
               </CardContent>
             </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>What is the default timezone?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 dark:text-gray-300">
+                  The default timezone is set to India (Asia/Kolkata). You can customize this in your settings to match your local timezone for accurate reminder timing.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>

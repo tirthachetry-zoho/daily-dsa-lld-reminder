@@ -352,9 +352,9 @@ export default function Home() {
             <div>
               <h3 className="text-white font-semibold mb-4">Product</h3>
               <ul className="space-y-2 text-sm">
+                <li><Link href="/" className="hover:text-white">Home</Link></li>
                 <li><Link href="/register" className="hover:text-white">Get Started</Link></li>
                 <li><Link href="/dashboard" className="hover:text-white">Dashboard</Link></li>
-                <li><Link href="/settings" className="hover:text-white">Settings</Link></li>
               </ul>
             </div>
             <div>
@@ -368,13 +368,18 @@ export default function Home() {
             <div>
               <h3 className="text-white font-semibold mb-4">Legal</h3>
               <ul className="space-y-2 text-sm">
-                <li><Link href="#" className="hover:text-white">Privacy Policy</Link></li>
-                <li><Link href="#" className="hover:text-white">Terms of Service</Link></li>
+                <li><Link href="/privacy" className="hover:text-white">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="hover:text-white">Terms of Service</Link></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
-            <p>&copy; 2024 DSA Reminder. All rights reserved.</p>
+            <p>
+              &copy; 2026 DSA Reminder · Built by{" "}
+              <Link href="https://www.linkedin.com/in/tirthachetry/" className="hover:text-white underline">
+                Tirtha
+              </Link>
+            </p>
           </div>
         </div>
       </footer>

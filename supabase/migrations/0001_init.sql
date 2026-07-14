@@ -12,6 +12,12 @@
 create extension if not exists "pgcrypto";   -- for gen_random_uuid()
 create extension if not exists "pg_cron";     -- scheduled jobs
 
+-- Allow the app's service_role (and postgres) to manage cron jobs.
+-- Without USAGE on the cron schema, calls from service_role fail with
+-- "42501: permission denied for schema cron".
+grant usage on schema cron to postgres, service_role;
+grant execute on all functions in schema cron to postgres, service_role;
+
 -- ------------------------------------------------------------
 -- Tables
 -- ------------------------------------------------------------

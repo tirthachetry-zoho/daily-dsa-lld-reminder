@@ -125,8 +125,14 @@ begin
   v_endpoint := coalesce(current_setting('app.settings.api_base_url', true), 'http://localhost:3000');
   v_payload := jsonb_build_object('userId', p_user_id::text);
 
-  -- Remove any existing job for this user, then create a fresh one
-  perform cron.unschedule(v_job_name);
+  -- Remove any existing job for this user (ignore if it doesn't exist yet).
+  -- cron.unschedule() raises XX000 "could not find valid entry for job"
+  -- when the job is absent, so we swallow that on first creation.
+  begin
+    perform cron.unschedule(v_job_name);
+  exception when others then
+    null;
+  end;
 
   v_command := format(
     'select supabase_functions.http_request(%L, %L, %L::jsonb, %L::jsonb, %L::jsonb)',

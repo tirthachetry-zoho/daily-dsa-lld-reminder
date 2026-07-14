@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { sentProblemRepository } from "@/repositories/sent-problem-repository";
 
 export async function GET(request: Request) {
   try {
@@ -13,16 +13,10 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get("limit") || "50");
 
-    const sentProblems = await prisma.sentProblem.findMany({
-      where: { userId: session.user.id },
-      include: {
-        problem: true,
-      },
-      orderBy: {
-        sentAt: "desc",
-      },
-      take: limit,
-    });
+    const sentProblems = await sentProblemRepository.findByUser(
+      session.user.id,
+      limit
+    );
 
     return NextResponse.json(sentProblems);
   } catch (error) {

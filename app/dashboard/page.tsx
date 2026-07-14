@@ -1,54 +1,43 @@
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { userRepository } from "@/repositories/user-repository";
+import { sentProblemRepository } from "@/repositories/sent-problem-repository";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Flame, Target, Clock, TrendingUp, CheckCircle2, Calendar } from "lucide-react";
 
 export default async function DashboardPage() {
   const session = await auth();
-  
+
   if (!session?.user) {
     return null;
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    include: {
-      sentProblems: {
-        include: {
-          problem: true,
-        },
-        orderBy: {
-          sentAt: "desc",
-        },
-        take: 30,
-      },
-    },
-  });
-
+  const user = await userRepository.findById(session.user.id);
   if (!user) {
     return null;
   }
 
+  const sentProblems = await sentProblemRepository.findByUser(user.id, 30);
+
   // Calculate stats
-  const totalProblems = user.sentProblems.length;
-  const completedProblems = user.sentProblems.filter((sp) => sp.completed).length;
+  const totalProblems = sentProblems.length;
+  const completedProblems = sentProblems.filter((sp) => sp.completed).length;
   const completionRate = totalProblems > 0 ? Math.round((completedProblems / totalProblems) * 100) : 0;
 
   // Calculate streak
-  const sortedProblems = [...user.sentProblems].sort((a, b) => 
-    new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime()
+  const sortedProblems = [...sentProblems].sort(
+    (a, b) => new Date(b.sent_at).getTime() - new Date(a.sent_at).getTime()
   );
-  
+
   let streak = 0;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   for (let i = 0; i < sortedProblems.length; i++) {
-    const problemDate = new Date(sortedProblems[i].sentAt);
+    const problemDate = new Date(sortedProblems[i].sent_at);
     problemDate.setHours(0, 0, 0, 0);
-    
+
     const daysDiff = Math.floor((today.getTime() - problemDate.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     if (daysDiff === i && sortedProblems[i].completed) {
       streak++;
     } else if (i === 0 && daysDiff === 1 && sortedProblems[i].completed) {
@@ -60,10 +49,12 @@ export default async function DashboardPage() {
 
   // Get today's problem
   const todayProblem = sortedProblems[0];
-  const isToday = todayProblem && new Date(todayProblem.sentAt).toDateString() === today.toDateString();
+  const isToday =
+    todayProblem &&
+    new Date(todayProblem.sent_at).toDateString() === today.toDateString();
 
   // Next reminder
-  const [hours, minutes] = user.reminderTime.split(":").map(Number);
+  const [hours, minutes] = user.reminder_time.split(":").map(Number);
   const nextReminder = new Date();
   nextReminder.setHours(hours, minutes, 0, 0);
   if (nextReminder < today) {
@@ -132,14 +123,14 @@ export default async function DashboardPage() {
               {nextReminder.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {user.isActive ? "Active" : "Paused"}
+              {user.is_active ? "Active" : "Paused"}
             </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Today's Problem */}
-      {isToday && todayProblem && (
+      {isToday && todayProblem && todayProblem.problem && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -191,9 +182,9 @@ export default async function DashboardPage() {
               )}
 
               <div className="flex gap-2 pt-4">
-                {todayProblem.problem.leetcodeUrl && (
+                {todayProblem.problem.leetcode_url && (
                   <a
-                    href={todayProblem.problem.leetcodeUrl}
+                    href={todayProblem.problem.leetcode_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
@@ -201,9 +192,9 @@ export default async function DashboardPage() {
                     Solve on LeetCode
                   </a>
                 )}
-                {todayProblem.problem.solutionUrl && (
+                {todayProblem.problem.solution_url && (
                   <a
-                    href={todayProblem.problem.solutionUrl}
+                    href={todayProblem.problem.solution_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
@@ -211,9 +202,9 @@ export default async function DashboardPage() {
                     View Solution
                   </a>
                 )}
-                {todayProblem.problem.youtubeUrl && (
+                {todayProblem.problem.youtube_url && (
                   <a
-                    href={todayProblem.problem.youtubeUrl}
+                    href={todayProblem.problem.youtube_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
@@ -252,7 +243,7 @@ export default async function DashboardPage() {
                 No problem received today yet
               </h3>
               <p className="text-gray-600 dark:text-gray-400">
-                Your next problem will arrive at {user.reminderTime} {user.timezone}
+                Your next problem will arrive at {user.reminder_time} {user.timezone}
               </p>
             </div>
           </CardContent>
@@ -277,10 +268,10 @@ export default async function DashboardPage() {
               >
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900 dark:text-white truncate">
-                    {sentProblem.problem.title}
+                    {sentProblem.problem?.title}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {new Date(sentProblem.sentAt).toLocaleDateString()}
+                    {new Date(sentProblem.sent_at).toLocaleDateString()}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -288,13 +279,13 @@ export default async function DashboardPage() {
                     <CheckCircle2 className="h-5 w-5 text-green-600" />
                   )}
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    sentProblem.problem.difficulty === "EASY"
+                    sentProblem.problem?.difficulty === "EASY"
                       ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                      : sentProblem.problem.difficulty === "MEDIUM"
+                      : sentProblem.problem?.difficulty === "MEDIUM"
                       ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
                       : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                   }`}>
-                     {sentProblem.problem.difficulty}
+                     {sentProblem.problem?.difficulty}
                   </span>
                 </div>
               </div>

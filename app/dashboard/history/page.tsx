@@ -1,24 +1,16 @@
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { sentProblemRepository } from "@/repositories/sent-problem-repository";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, Clock, ExternalLink, Youtube, BookOpen } from "lucide-react";
 
 export default async function HistoryPage() {
   const session = await auth();
-  
+
   if (!session?.user) {
     return null;
   }
 
-  const sentProblems = await prisma.sentProblem.findMany({
-    where: { userId: session.user.id },
-    include: {
-      problem: true,
-    },
-    orderBy: {
-      sentAt: "desc",
-    },
-  });
+  const sentProblems = await sentProblemRepository.findByUser(session.user.id, 100);
 
   return (
     <div className="space-y-8">
@@ -56,23 +48,23 @@ export default async function HistoryPage() {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
-                        {sentProblem.problem.title}
+                        {sentProblem.problem?.title}
                       </h3>
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          sentProblem.problem.difficulty === "EASY"
+                          sentProblem.problem?.difficulty === "EASY"
                             ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            : sentProblem.problem.difficulty === "MEDIUM"
+                            : sentProblem.problem?.difficulty === "MEDIUM"
                             ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
                             : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                         }`}>
-                          {sentProblem.problem.difficulty}
+                          {sentProblem.problem?.difficulty}
                         </span>
                         <span className="text-sm text-gray-600 dark:text-gray-400">
-                          {sentProblem.problem.topic}
+                          {sentProblem.problem?.topic}
                         </span>
                         <span className="text-sm text-gray-600 dark:text-gray-400">
-                          • {sentProblem.problem.type === "DSA" ? "DSA" : "System Design"}
+                          • {sentProblem.problem?.type === "DSA" ? "DSA" : "System Design"}
                         </span>
                       </div>
                     </div>
@@ -85,7 +77,7 @@ export default async function HistoryPage() {
                     </div>
                   </div>
 
-                  {sentProblem.problem.companies && sentProblem.problem.companies.length > 0 && (
+                  {sentProblem.problem?.companies && sentProblem.problem.companies.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-3">
                       {sentProblem.problem.companies.map((company) => (
                         <span
@@ -100,7 +92,7 @@ export default async function HistoryPage() {
 
                   <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-800">
                     <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                      <span>{new Date(sentProblem.sentAt).toLocaleDateString()}</span>
+                      <span>{new Date(sentProblem.sent_at).toLocaleDateString()}</span>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         sentProblem.completed
                           ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
@@ -116,9 +108,9 @@ export default async function HistoryPage() {
                     </div>
 
                     <div className="flex gap-2">
-                      {sentProblem.problem.leetcodeUrl && (
+                      {sentProblem.problem?.leetcode_url && (
                         <a
-                          href={sentProblem.problem.leetcodeUrl}
+                          href={sentProblem.problem.leetcode_url}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
@@ -127,9 +119,9 @@ export default async function HistoryPage() {
                           <ExternalLink className="h-4 w-4" />
                         </a>
                       )}
-                      {sentProblem.problem.solutionUrl && (
+                      {sentProblem.problem?.solution_url && (
                         <a
-                          href={sentProblem.problem.solutionUrl}
+                          href={sentProblem.problem.solution_url}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
@@ -138,9 +130,9 @@ export default async function HistoryPage() {
                           <BookOpen className="h-4 w-4" />
                         </a>
                       )}
-                      {sentProblem.problem.youtubeUrl && (
+                      {sentProblem.problem?.youtube_url && (
                         <a
-                          href={sentProblem.problem.youtubeUrl}
+                          href={sentProblem.problem.youtube_url}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"

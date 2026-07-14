@@ -25,16 +25,14 @@ A production-ready SaaS web application that delivers daily DSA (Data Structures
 ### Backend
 - **Next.js API Routes**
 - **Server Actions**
-- **Prisma ORM**
 
 ### Database & Auth
-- **Supabase PostgreSQL**
-- **Supabase Auth**
-- **NextAuth v5**
+- **Supabase PostgreSQL** (via `@supabase/supabase-js`)
+- **NextAuth v5** (email/password + Google OAuth)
 
 ### Email & Scheduling
 - **Resend** (Email service)
-- **GitHub Actions** (Hourly cron jobs)
+- **pg_cron** (in-database scheduling on Supabase)
 
 ### Deployment
 - **Vercel**
@@ -42,8 +40,8 @@ A production-ready SaaS web application that delivers daily DSA (Data Structures
 ## 📋 Prerequisites
 
 - Node.js 20+
-- PostgreSQL database (Supabase recommended)
-- Resend API key
+- A **Supabase** project (PostgreSQL + pg_cron enabled)
+- A **Resend** API key
 - Google OAuth credentials (optional, for Google login)
 
 ## 🚀 Getting Started
@@ -63,20 +61,22 @@ npm install
 
 ### 3. Set up environment variables
 
-Create a `.env` file in the root directory:
+Create a `.env` file in the root directory (see `.env.example`):
 
 ```env
-# Database
-DATABASE_URL="postgresql://user:password@localhost:5432/dsa_reminder"
-DIRECT_URL="postgresql://user:password@localhost:5432/dsa_reminder"
-
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL="your-supabase-url"
+# Supabase (PostgreSQL + Auth)
+NEXT_PUBLIC_SUPABASE_URL="https://<your-ref>.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
 SUPABASE_SERVICE_ROLE_KEY="your-supabase-service-role-key"
 
-# Resend
+# Public base URL — used by pg_cron to call the send-reminders API.
+# Set this to your deployed URL (e.g. https://your-app.vercel.app) in production.
+API_BASE_URL="http://localhost:3000"
+
+# Resend (email sending)
 RESEND_API_KEY="your-resend-api-key"
+# Must be a verified sender domain, e.g. "noreply@yourdomain.com"
+# For local testing without a domain use "onboarding@resend.dev"
 EMAIL_FROM="noreply@yourdomain.com"
 
 # NextAuth
@@ -87,21 +87,36 @@ NEXTAUTH_URL="http://localhost:3000"
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
 
-# Cron Secret (optional, for GitHub Actions)
+# Cron Secret (optional, sent as "Authorization: Bearer <CRON_SECRET>" to /api/send-reminders)
 CRON_SECRET="your-cron-secret"
 ```
 
-### 4. Set up the database
+### 4. Create the database schema
+
+The app uses the **Supabase JS client** (no Prisma). Apply the schema + pg_cron scheduling by running the SQL in
+[`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) in the **Supabase SQL Editor**
+(Project → SQL → New query → paste → Run).
+
+This creates the `users`, `problems`, and `sent_problems` tables, enables Row Level Security, and installs the
+`pg_cron` functions/triggers that automatically schedule a per-user reminder job whenever a user is created or
+updates their `reminder_time` / `is_active`.
+
+> **Important:** After running the migration, set the `api_base_url` setting used by pg_cron (so the cron job knows
+> where to call your API). In the SQL editor run:
+> ```sql
+> alter database postgres set app.settings.api_base_url = 'http://localhost:3000';
+> ```
+> (Use your production URL in deployment.)
+
+### 5. Seed the problems
 
 ```bash
-# Push the schema to your database
-npm run db:push
-
-# Seed the database with problems
 npm run db:seed
 ```
 
-### 5. Run the development server
+This loads the DSA and System Design problems from `data/` into the `problems` table.
+
+### 6. Run the development server
 
 ```bash
 npm run dev
@@ -111,23 +126,19 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 🌐 How to Get Every Environment Variable
 
-This app is configured for **Supabase (PostgreSQL)** + **Resend** + **NextAuth**. Below is exactly where to obtain each value.
-
 ### From Supabase (database + keys)
 1. Create a project at [supabase.com](https://supabase.com).
-2. **Project Settings → Database → Connection string**:
-   - **Connection pooling** (Session mode, port `6543`) → `DATABASE_URL` (append `?pgbouncer=true&connection_limit=1`).
-   - **Direct connection** (port `5432`) → `DIRECT_URL` (used by Prisma `db push`/migrations).
-   - The DB password is the one you set when creating the project (replace `YOUR_SUPABASE_DB_PASSWORD`).
-3. **Project Settings → API**:
+2. **Project Settings → API**:
    - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL` (e.g. `https://<ref>.supabase.co`).
    - **`anon` `public` key** → `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
    - **`service_role` key** → `SUPABASE_SERVICE_ROLE_KEY` (keep secret; never expose to the client).
+3. **Database → Extensions**: enable **`pg_cron`** (and `pgcrypto`, which the migration enables automatically).
 
 ### From Resend (email sending)
 1. Sign up at [resend.com](https://resend.com) → **API Keys → Create API Key** → `RESEND_API_KEY`.
 2. **Domains → Add Domain** and verify it (e.g. `yourdomain.com`).
 3. Set `EMAIL_FROM` to an address on that domain, e.g. `noreply@yourdomain.com`.
+   (For local testing without a verified domain, use `onboarding@resend.dev`.)
 
 ### From NextAuth (sessions)
 - `NEXTAUTH_SECRET`: generate with `openssl rand -base64 32`.
@@ -139,87 +150,8 @@ This app is configured for **Supabase (PostgreSQL)** + **Resend** + **NextAuth**
 3. Add authorized redirect URI: `https://<your-domain>/api/auth/callback/google`.
 4. Copy **Client ID** → `GOOGLE_CLIENT_ID` and **Client Secret** → `GOOGLE_CLIENT_SECRET`.
 
-### CRON_SECRET (optional — secures the reminder cron)
-- Any random string, e.g. `openssl rand -base64 24`. The Vercel cron job / GitHub Action sends it as a `Bearer` token.
-
-### Where to put them
-- **Local**: paste into `.env` (see `.env.example`).
-- **Vercel**: Project Settings → Environment Variables.
-- **GitHub Actions**: repository Secrets.
-
-> Note: `DATABASE_URL` is always required. `DIRECT_URL` is required by the Prisma schema (`directUrl`) — locally point it at the same DB; on Supabase use the direct (non-pooled) connection.
-
-## 🔑 Key Creation Guide
-
-This section explains how to obtain every value in `.env`. Items marked **(required)** are needed for the app to function; the rest are optional.
-
-### 1. Database — Local PostgreSQL (required for local dev)
-
-You already have this working with trust auth on localhost:
-
-```env
-DATABASE_URL="postgresql://tirtha@localhost:5432/dsa_reminder?schema=public"
-DIRECT_URL="postgresql://tirtha@localhost:5432/dsa_reminder?schema=public"
-```
-
-To recreate it from scratch:
-
-```bash
-createdb dsa_reminder          # uses your local 'tirtha' role (trust auth)
-npm run db:push                # create tables from prisma/schema.prisma
-npm run db:seed                # load DSA + System Design problems
-```
-
-> **Production alternative (Vercel):** use **Supabase** instead — see the [Deployment](#-deployment-vercel--supabase) section for the pooled/direct connection strings.
-
-### 2. Resend — Email sending (required for reminders to send)
-
-1. Sign up at [resend.com](https://resend.com) → **API Keys → Create API Key**.
-2. Copy the key into `RESEND_API_KEY`.
-3. **Domains → Add Domain** and verify it (e.g. `yourdomain.com`).
-4. Set `EMAIL_FROM` to an address on that domain, e.g. `noreply@yourdomain.com`.
-
-Without these, the app runs but reminder emails fail to send.
-
-### 3. NextAuth — Session secret (required for login)
-
-Generate a random secret and set `NEXTAUTH_SECRET`:
-
-```bash
-openssl rand -base64 32
-```
-
-Set `NEXTAUTH_URL` to the app origin:
-
-- Local: `http://localhost:3000`
-- Production: your Vercel URL (e.g. `https://your-app.vercel.app`)
-
-### 4. Google OAuth (optional — Google login)
-
-1. Go to [Google Cloud Console → APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials).
-2. **Create Credentials → OAuth client ID** (Application type: Web application).
-3. Add an authorized redirect URI: `https://<your-domain>/api/auth/callback/google`.
-4. Copy **Client ID** → `GOOGLE_CLIENT_ID` and **Client Secret** → `GOOGLE_CLIENT_SECRET`.
-
-### 5. CRON_SECRET (optional — secures the reminder cron)
-
-Any random string; the Vercel cron job / GitHub Action sends it as a `Bearer` token:
-
-```bash
-openssl rand -base64 24
-```
-
-Set the same value in `CRON_SECRET` (Vercel env var / GitHub repo secret).
-
-### 6. Supabase keys (only if using Supabase Auth)
-
-If you switch the database to Supabase (production), also copy from **Supabase → Project Settings → API**:
-
-- `NEXT_PUBLIC_SUPABASE_URL` — the project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — the `anon` `public` key
-- `SUPABASE_SERVICE_ROLE_KEY` — the `service_role` key (keep secret)
-
-> Note: this app uses **NextAuth** for sessions, not Supabase Auth, so these are only needed when the database itself is hosted on Supabase.
+### CRON_SECRET (optional — secures the reminder endpoint)
+- Any random string, e.g. `openssl rand -base64 24`. The pg_cron job (or a manual call) sends it as a `Bearer` token.
 
 ## 📁 Project Structure
 
@@ -227,10 +159,11 @@ If you switch the database to Supabase (production), also copy from **Supabase �
 ├── app/                      # Next.js app directory
 │   ├── api/                  # API routes
 │   │   ├── auth/            # NextAuth endpoints
-│   │   ├── send-reminders/  # Reminder scheduler
+│   │   ├── send-reminders/  # Reminder scheduler (called by pg_cron)
 │   │   ├── settings/        # Settings API
 │   │   ├── history/         # History API
 │   │   ├── complete/        # Completion API
+│   │   ├── register/        # Registration API
 │   │   └── send-preview/    # Email preview API
 │   ├── dashboard/           # Dashboard pages
 │   │   ├── settings/        # Settings page
@@ -248,68 +181,69 @@ If you switch the database to Supabase (production), also copy from **Supabase �
 │   ├── dsaProblems.ts       # DSA problems
 │   └── systemDesignProblems.ts # System Design problems
 ├── lib/                     # Utility functions
-│   ├── prisma.ts            # Prisma client
+│   ├── supabase.ts          # Supabase client
 │   ├── auth.ts              # NextAuth configuration
 │   └── utils.ts             # Utility functions
-├── repositories/            # Data access layer
+├── repositories/            # Data access layer (Supabase JS)
 │   ├── user-repository.ts
 │   ├── problem-repository.ts
 │   └── sent-problem-repository.ts
 ├── services/                # Business logic
 │   ├── email-service.ts
 │   └── reminder-service.ts
-├── prisma/                  # Prisma files
-│   ├── schema.prisma        # Database schema
-│   └── seed.ts              # Database seed
 ├── scripts/                 # Utility scripts
-│   └── send-reminders.ts    # Cron job script
-├── .github/                 # GitHub workflows
-│   └── workflows/
-│       └── send-reminders.yml
-└── types/                   # TypeScript types
-    └── index.ts
+│   ├── seed.ts              # Database seed
+│   └── send-reminders.ts    # Manual reminder runner
+├── supabase/
+│   └── migrations/
+│       └── 0001_init.sql    # Schema + pg_cron scheduling
+├── types/                   # TypeScript types
+│   └── index.ts
+└── vercel.json              # Vercel project config
 ```
 
 ## 🗄️ Database Schema
 
-### User
-- `id`: Unique identifier
-- `email`: User email
-- `password`: Hashed password (optional for OAuth users)
-- `timezone`: User timezone
-- `reminderTime`: Daily reminder time
-- `frequencyDays`: DSA problem frequency
-- `systemDesignFrequency`: System Design frequency
-- `isActive`: Whether reminders are active
-- `createdAt`: Account creation date
-- `updatedAt`: Last update date
+Tables live in the `public` schema of your Supabase project.
 
-### Problem
-- `id`: Unique identifier
-- `title`: Problem title
-- `difficulty`: EASY, MEDIUM, or HARD
-- `topic`: Problem topic/category
-- `companies`: List of companies asking this problem
-- `leetcodeUrl`: LeetCode problem URL
-- `solutionUrl`: Solution URL
-- `youtubeUrl`: YouTube explanation URL
-- `description`: Problem description (for System Design)
-- `primaryUrl`: Primary reference URL (for System Design)
-- `type`: DSA or SYSTEM_DESIGN
-- `createdAt`: Creation date
+### users
+- `id`: uuid (PK)
+- `email`: text (unique)
+- `password`: text (hashed, optional for OAuth users)
+- `timezone`: text
+- `reminder_time`: text (e.g. `"09:00"`)
+- `frequency_days`: int (DSA problem frequency)
+- `system_design_frequency`: int
+- `is_active`: boolean
+- `created_at`, `updated_at`: timestamptz
 
-### SentProblem
-- `id`: Unique identifier
-- `userId`: Reference to User
-- `problemId`: Reference to Problem
-- `sentAt`: When the problem was sent
-- `opened`: Whether the user opened the email
-- `completed`: Whether the user completed the problem
+### problems
+- `id`: text (PK, slug of title)
+- `title`: text
+- `difficulty`: `EASY` | `MEDIUM` | `HARD`
+- `topic`: text
+- `companies`: text[]
+- `leetcode_url`, `solution_url`, `youtube_url`: text
+- `description`, `primary_url`: text (System Design)
+- `type`: `DSA` | `SYSTEM_DESIGN`
+- `created_at`: timestamptz
+
+### sent_problems
+- `id`: uuid (PK)
+- `user_id`: uuid → `users.id`
+- `problem_id`: text → `problems.id`
+- `sent_at`: timestamptz
+- `opened`: boolean
+- `completed`: boolean
 
 ## 🔧 API Routes
 
 ### POST /api/send-reminders
-Processes and sends daily reminders to all active users. Called by GitHub Actions hourly.
+Sends the daily reminder to a single user (expects `{ "userId": "<uuid>" }` in the body). Secured by `CRON_SECRET`
+(optional). Called automatically by the per-user **pg_cron** job installed by the migration.
+
+### POST /api/register
+Create a new user (email + password). Also schedules their pg_cron reminder job.
 
 ### POST /api/settings
 Update user settings (reminder time, timezone, frequency, etc.)
@@ -343,84 +277,71 @@ The daily reminder email includes:
   - Video link
 - **Footer**: "Happy Coding! 🎉"
 
-## ⏰ Scheduling
+## ⏰ Scheduling (pg_cron)
 
-Reminders are sent hourly. On Vercel this is handled by **Vercel Cron Jobs** (configured in `vercel.json`, which calls `POST /api/send-reminders` every hour). A GitHub Actions workflow (`.github/workflows/send-reminders.yml`) is also included as an alternative for non-Vercel hosts. The job:
+Scheduling is handled **inside the database** with `pg_cron` (no external cron host needed):
 
-1. Checks all active users
-2. Determines if it's their reminder time based on timezone
-3. Checks if a problem was already sent today
-4. Selects the next unseen DSA problem
-5. Includes a System Design problem if configured frequency matches
-6. Sends the email via Resend
-7. Records the sent problem in the database
+1. When a user registers or updates `reminder_time` / `is_active`, a Postgres **trigger** calls
+   `schedule_user_reminder(user_id)`.
+2. That function creates a dedicated cron job `send_reminder_<user_id>` that fires at the user's `reminder_time`
+   (in the server's timezone) and invokes `supabase_functions.http_request` against
+   `POST <API_BASE_URL>/api/send-reminders` with `{ "userId": "..." }`.
+3. The API route selects the next unseen DSA problem (and a System Design problem per the configured frequency),
+   sends the email via Resend, and records it in `sent_problems`.
 
-## 🗄️ Database: Supabase (PostgreSQL)
+> The `API_BASE_URL` is read from the `app.settings.api_base_url` database setting (set it after the migration, as
+> shown in step 4 above). In production point it at your Vercel URL.
 
-This project uses **Prisma** with **Supabase PostgreSQL** — Supabase is a managed Postgres instance, so no code changes are needed; you only point Prisma at your Supabase connection strings.
+You can also trigger reminders manually:
 
-1. Create a project at [supabase.com](https://supabase.com).
-2. In **Project Settings → Database**, copy two connection strings:
-   - **Connection pooling** (Session mode, port `6543`) → use for `DATABASE_URL` (runtime, with `?pgbouncer=true&connection_limit=1`).
-   - **Direct connection** (port `5432`) → use for `DIRECT_URL` (Prisma migrations/`db push`).
-3. Set them in your `.env` (see `.env.example`) and in Vercel's environment variables.
-
-> Why two URLs? Supabase's pooler is required for serverless runtime connections, but Prisma migrations need a direct (non-pooled) connection. The `directUrl` is declared in `prisma/schema.prisma`.
+```bash
+npm run send-reminders   # processes reminders for all users due now
+```
 
 ## 🚀 Deployment (Vercel + Supabase)
 
-### 1. Provision the database
-
-```bash
-# Push the schema to your Supabase Postgres instance
-npm run db:push
-
-# Seed problems (DSA + System Design)
-npm run db:seed
+### 1. Apply the schema
+Run [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) in the **production** Supabase SQL
+editor, then set the production `api_base_url`:
+```sql
+alter database postgres set app.settings.api_base_url = 'https://your-app.vercel.app';
 ```
 
-### 2. Deploy to Vercel
+### 2. Seed the problems
+```bash
+API_BASE_URL="https://your-app.vercel.app" npm run db:seed
+```
 
+### 3. Deploy to Vercel
 1. Push your code to GitHub.
 2. Import the repository in [Vercel](https://vercel.com).
 3. Add the environment variables below in the Vercel project settings.
-4. Deploy. Vercel will run `npm run build` (which includes `prisma generate`) and register the hourly cron from `vercel.json`.
+4. Deploy. Vercel runs `npm run build` and serves the app.
 
 ### Environment Variables (Vercel)
-
-- `DATABASE_URL` — Supabase **pooled** connection string (port 6543, `?pgbouncer=true`)
-- `DIRECT_URL` — Supabase **direct** connection string (port 5432)
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `API_BASE_URL` — your Vercel deployment URL (e.g. `https://your-app.vercel.app`)
 - `RESEND_API_KEY`
 - `EMAIL_FROM`
 - `NEXTAUTH_SECRET`
-- `NEXTAUTH_URL` — your Vercel deployment URL (e.g. `https://your-app.vercel.app`)
+- `NEXTAUTH_URL` — your Vercel deployment URL
 - `GOOGLE_CLIENT_ID` (optional)
 - `GOOGLE_CLIENT_SECRET` (optional)
-- `CRON_SECRET` (optional, but recommended — the cron job sends this as a `Bearer` token)
-
-### GitHub Actions (alternative scheduler)
-
-If you host elsewhere, the included workflow runs hourly. Add these repository secrets:
-
-- `DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `EMAIL_FROM`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `CRON_SECRET`
+- `CRON_SECRET` (optional, but recommended)
 
 ## 🧪 Testing
 
 ### Run the reminder script manually
-
 ```bash
 npm run send-reminders
 ```
 
 ### Send a test email
-
 Use the Email Preview page in the dashboard to send a test email to yourself.
 
 ### Seed the database
-
 ```bash
 npm run db:seed
 ```
@@ -428,19 +349,16 @@ npm run db:seed
 ## 🎨 Customization
 
 ### Adding New Problems
-
 Edit the files in the `data/` directory:
 - `data/dsaProblems.ts` - Add DSA problems
 - `data/systemDesignProblems.ts` - Add System Design problems
 
 Then run the seed script:
-
 ```bash
 npm run db:seed
 ```
 
 ### Modifying Email Template
-
 Edit the `generateEmailHtml` method in:
 - `services/email-service.ts` - Service layer
 - `app/api/send-reminders/route.ts` - API route
@@ -450,8 +368,9 @@ Edit the `generateEmailHtml` method in:
 
 - Passwords are hashed using bcrypt
 - NextAuth handles session management
+- The app uses the Supabase **service role** key server-side (bypasses RLS)
 - Environment variables for sensitive data
-- Optional CRON_SECRET for GitHub Actions authentication
+- Optional `CRON_SECRET` for `/api/send-reminders` authentication
 
 ## 📝 License
 
@@ -467,4 +386,4 @@ For issues or questions, please open an issue on GitHub.
 
 ---
 
-Built with ❤️ using Next.js, Prisma, and Supabase
+Built with ❤️ using Next.js, Supabase, and Resend

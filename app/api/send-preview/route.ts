@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
-import { prisma } from "@/lib/prisma";
+import { problemRepository } from "@/repositories/problem-repository";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -16,14 +16,14 @@ export async function POST(request: Request) {
     }
 
     // Get a sample DSA problem
-    const dsaProblem = await prisma.problem.findFirst({
-      where: { type: "DSA" },
-    });
+    const dsaProblem = await problemRepository.findByType("DSA").then(
+      (rows) => rows[0] ?? null
+    );
 
     // Get a sample System Design problem
-    const systemDesignProblem = await prisma.problem.findFirst({
-      where: { type: "SYSTEM_DESIGN" },
-    });
+    const systemDesignProblem = await problemRepository
+      .findByType("SYSTEM_DESIGN")
+      .then((rows) => rows[0] ?? null);
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -58,9 +58,9 @@ export async function POST(request: Request) {
           ` : ''}
 
           <div style="margin-top: 20px;">
-            ${dsaProblem?.leetcodeUrl ? `<a href="${dsaProblem.leetcodeUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; margin-right: 10px;">Solve on LeetCode</a>` : ''}
-            ${dsaProblem?.solutionUrl ? `<a href="${dsaProblem.solutionUrl}" style="display: inline-block; background: #e5e7eb; color: #1f2937; padding: 10px 20px; text-decoration: none; border-radius: 6px; margin-right: 10px;">View Solution</a>` : ''}
-            ${dsaProblem?.youtubeUrl ? `<a href="${dsaProblem.youtubeUrl}" style="display: inline-block; background: #dc2626; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px;">Watch YouTube</a>` : ''}
+            ${dsaProblem?.leetcode_url ? `<a href="${dsaProblem.leetcode_url}" style="display: inline-block; background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; margin-right: 10px;">Solve on LeetCode</a>` : ''}
+            ${dsaProblem?.solution_url ? `<a href="${dsaProblem.solution_url}" style="display: inline-block; background: #e5e7eb; color: #1f2937; padding: 10px 20px; text-decoration: none; border-radius: 6px; margin-right: 10px;">View Solution</a>` : ''}
+            ${dsaProblem?.youtube_url ? `<a href="${dsaProblem.youtube_url}" style="display: inline-block; background: #dc2626; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px;">Watch YouTube</a>` : ''}
           </div>
         </div>
 
@@ -70,8 +70,8 @@ export async function POST(request: Request) {
           <p style="color: #666;">${systemDesignProblem?.description || "Design a service like TinyURL or bit.ly that shortens long URLs."}</p>
           
           <div style="margin-top: 20px;">
-            ${systemDesignProblem?.primaryUrl ? `<a href="${systemDesignProblem.primaryUrl}" style="display: inline-block; background: #7c3aed; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; margin-right: 10px;">View Reference</a>` : ''}
-            ${systemDesignProblem?.youtubeUrl ? `<a href="${systemDesignProblem.youtubeUrl}" style="display: inline-block; background: #dc2626; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px;">Watch Video</a>` : ''}
+            ${systemDesignProblem?.primary_url ? `<a href="${systemDesignProblem.primary_url}" style="display: inline-block; background: #7c3aed; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; margin-right: 10px;">View Reference</a>` : ''}
+            ${systemDesignProblem?.youtube_url ? `<a href="${systemDesignProblem.youtube_url}" style="display: inline-block; background: #dc2626; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px;">Watch Video</a>` : ''}
           </div>
         </div>
 

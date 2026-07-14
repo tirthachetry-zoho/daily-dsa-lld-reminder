@@ -1,104 +1,131 @@
-import { prisma } from "@/lib/prisma";
-import { Problem, ProblemType } from "@prisma/client";
+import { supabase } from "@/lib/supabase";
+
+export type ProblemType = "DSA" | "SYSTEM_DESIGN";
+export type Difficulty = "EASY" | "MEDIUM" | "HARD";
+
+export interface ProblemRow {
+  id: string;
+  title: string;
+  difficulty: Difficulty;
+  topic: string;
+  companies: string[];
+  leetcode_url: string | null;
+  solution_url: string | null;
+  youtube_url: string | null;
+  description: string | null;
+  primary_url: string | null;
+  type: ProblemType;
+  created_at: string;
+}
 
 export class ProblemRepository {
-  async findById(id: string): Promise<Problem | null> {
-    return prisma.problem.findUnique({
-      where: { id },
-    });
+  async findById(id: string): Promise<ProblemRow | null> {
+    const { data, error } = await supabase
+      .from("problems")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw error;
+    return data as ProblemRow | null;
   }
 
-  async findByType(type: ProblemType): Promise<Problem[]> {
-    return prisma.problem.findMany({
-      where: { type },
-    });
+  async findByType(type: ProblemType): Promise<ProblemRow[]> {
+    const { data, error } = await supabase
+      .from("problems")
+      .select("*")
+      .eq("type", type);
+    if (error) throw error;
+    return (data as ProblemRow[]) ?? [];
   }
 
-  async findFirstByType(type: ProblemType): Promise<Problem | null> {
-    return prisma.problem.findFirst({
-      where: { type },
-    });
-  }
-
-  async findRandomByType(type: ProblemType): Promise<Problem | null> {
-    const problems = await prisma.problem.findMany({
-      where: { type },
-      select: { id: true },
-    });
-    if (problems.length === 0) return null;
-    const random = problems[Math.floor(Math.random() * problems.length)];
-    return prisma.problem.findUnique({ where: { id: random.id } });
-  }
-
-  async findUnseenByUser(
-    userId: string,
-    type: ProblemType
-  ): Promise<Problem | null> {
-    const sentProblemIds = await prisma.sentProblem
-      .findMany({
-        where: { userId, problem: { type } },
-        select: { problemId: true },
-      })
-      .then((sent) => sent.map((s) => s.problemId));
-
-    return prisma.problem.findFirst({
-      where: {
-        type,
-        id: { notIn: sentProblemIds.length > 0 ? sentProblemIds : undefined },
-      },
-    });
+  async findRandomByType(type: ProblemType): Promise<ProblemRow | null> {
+    const { data, error } = await supabase
+      .from("problems")
+      .select("id")
+      .eq("type", type);
+    if (error) throw error;
+    const rows = (data as { id: string }[]) ?? [];
+    if (rows.length === 0) return null;
+    const random = rows[Math.floor(Math.random() * rows.length)];
+    return this.findById(random.id);
   }
 
   async findRandomUnseenByUser(
     userId: string,
     type: ProblemType
-  ): Promise<Problem | null> {
-    const sentProblemIds = await prisma.sentProblem
-      .findMany({
-        where: { userId, problem: { type } },
-        select: { problemId: true },
-      })
-      .then((sent) => sent.map((s) => s.problemId));
+  ): Promise<ProblemRow | null> {
+    // Fetch ids of problems already sent to this user of this type
+    const { data: sent, error: sentError } = await supabase
+      .from("sent_problems")
+      .select("problem_id")
+      .eq("user_id", userId);
+    if (sentError) throw sentError;
 
-    const unseen = await prisma.problem.findMany({
-      where: {
-        type,
-        id: { notIn: sentProblemIds.length > 0 ? sentProblemIds : undefined },
-      },
-      select: { id: true },
-    });
+    const sentIds = (sent as { problem_id: string }[]).map((s) => s.problem_id);
+
+    let query = supabase.from("problems").select("id").eq("type", type);
+    if (sentIds.length > 0) {
+      query = query.not("id", "in", `(${sentIds.join(",")})`);
+    }
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const unseen = (data as { id: string }[]) ?? [];
     if (unseen.length === 0) return null;
     const random = unseen[Math.floor(Math.random() * unseen.length)];
-    return prisma.problem.findUnique({ where: { id: random.id } });
+    return this.findById(random.id);
   }
 
   async create(data: {
     title: string;
-    difficulty: "EASY" | "MEDIUM" | "HARD";
+    difficulty: Difficulty;
     topic: string;
     companies: string[];
-    leetcodeUrl?: string;
-    solutionUrl?: string;
-    youtubeUrl?: string;
+    leetcode_url?: string;
+    solution_url?: string;
+    youtube_url?: string;
     description?: string;
-    primaryUrl?: string;
+    primary_url?: string;
     type: ProblemType;
-  }): Promise<Problem> {
-    return prisma.problem.create({
-      data,
-    });
+  }): Promise<ProblemRow> {
+    const { data: created, error } = await supabase
+      .from("problems")
+      .insert({
+        title: data.title,
+        difficulty: data.difficulty,
+        topic: data.topic,
+        companies: data.companies,
+        leetcode_url: data.leetcode_url ?? null,
+        solution_url: data.solution_url ?? null,
+        youtube_url: data.youtube_url ?? null,
+        description: data.description ?? null,
+        primary_url: data.primary_url ?? null,
+        type: data.type,
+      })
+      .select("*")
+      .single();
+    if (error) throw error;
+    return created as ProblemRow;
   }
 
   async countByType(type: ProblemType): Promise<number> {
-    return prisma.problem.count({
-      where: { type },
-    });
+    const { count, error } = await supabase
+      .from("problems")
+      .select("*", { count: "exact", head: true })
+      .eq("type", type);
+    if (error) throw error;
+    return count ?? 0;
   }
 
-  async delete(id: string): Promise<Problem> {
-    return prisma.problem.delete({
-      where: { id },
-    });
+  async delete(id: string): Promise<ProblemRow> {
+    const { data, error } = await supabase
+      .from("problems")
+      .delete()
+      .eq("id", id)
+      .select("*")
+      .single();
+    if (error) throw error;
+    return data as ProblemRow;
   }
 }
 

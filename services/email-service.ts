@@ -1,13 +1,13 @@
 import { Resend } from "resend";
-import { Problem } from "@prisma/client";
+import { ProblemRow } from "@/repositories/problem-repository";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export class EmailService {
   async sendReminderEmail(
     to: string,
-    dsaProblem: Problem,
-    systemDesignProblem: Problem | null
+    dsaProblem: ProblemRow,
+    systemDesignProblem: ProblemRow | null
   ): Promise<void> {
     const emailHtml = this.generateEmailHtml(dsaProblem, systemDesignProblem);
 
@@ -20,8 +20,8 @@ export class EmailService {
   }
 
   private generateEmailHtml(
-    dsaProblem: Problem,
-    systemDesignProblem: Problem | null
+    dsaProblem: ProblemRow,
+    systemDesignProblem: ProblemRow | null
   ): string {
     const difficultyColors = {
       EASY: "#dcfce7",
@@ -68,9 +68,9 @@ export class EmailService {
           ` : ''}
 
           <div style="margin-top: 20px;">
-            ${dsaProblem.leetcodeUrl ? `<a href="${dsaProblem.leetcodeUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; margin-right: 10px;">Solve on LeetCode</a>` : ''}
-            ${dsaProblem.solutionUrl ? `<a href="${dsaProblem.solutionUrl}" style="display: inline-block; background: #e5e7eb; color: #1f2937; padding: 10px 20px; text-decoration: none; border-radius: 6px; margin-right: 10px;">View Solution</a>` : ''}
-            ${dsaProblem.youtubeUrl ? `<a href="${dsaProblem.youtubeUrl}" style="display: inline-block; background: #dc2626; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px;">Watch YouTube</a>` : ''}
+            ${dsaProblem.leetcode_url ? `<a href="${dsaProblem.leetcode_url}" style="display: inline-block; background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; margin-right: 10px;">Solve on LeetCode</a>` : ''}
+            ${dsaProblem.solution_url ? `<a href="${dsaProblem.solution_url}" style="display: inline-block; background: #e5e7eb; color: #1f2937; padding: 10px 20px; text-decoration: none; border-radius: 6px; margin-right: 10px;">View Solution</a>` : ''}
+            ${dsaProblem.youtube_url ? `<a href="${dsaProblem.youtube_url}" style="display: inline-block; background: #dc2626; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px;">Watch YouTube</a>` : ''}
           </div>
         </div>
 
@@ -81,8 +81,8 @@ export class EmailService {
           <p style="color: #666;">${systemDesignProblem.description || ""}</p>
           
           <div style="margin-top: 20px;">
-            ${systemDesignProblem.primaryUrl ? `<a href="${systemDesignProblem.primaryUrl}" style="display: inline-block; background: #7c3aed; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; margin-right: 10px;">View Reference</a>` : ''}
-            ${systemDesignProblem.youtubeUrl ? `<a href="${systemDesignProblem.youtubeUrl}" style="display: inline-block; background: #dc2626; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px;">Watch Video</a>` : ''}
+            ${systemDesignProblem.primary_url ? `<a href="${systemDesignProblem.primary_url}" style="display: inline-block; background: #7c3aed; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; margin-right: 10px;">View Reference</a>` : ''}
+            ${systemDesignProblem.youtube_url ? `<a href="${systemDesignProblem.youtube_url}" style="display: inline-block; background: #dc2626; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px;">Watch Video</a>` : ''}
           </div>
         </div>
         ` : ''}

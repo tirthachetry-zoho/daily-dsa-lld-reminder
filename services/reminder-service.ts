@@ -1,11 +1,10 @@
-import { userRepository } from "@/repositories/user-repository";
-import { problemRepository } from "@/repositories/problem-repository";
+import { userRepository, UserRow } from "@/repositories/user-repository";
+import { problemRepository, ProblemRow } from "@/repositories/problem-repository";
 import { sentProblemRepository } from "@/repositories/sent-problem-repository";
 import { emailService } from "@/services/email-service";
-import { toZonedTime } from "date-fns-tz";
 
 export class ReminderService {
-  async processReminders(): Promise<{
+  async processReminders(userId?: string): Promise<{
     processed: number;
     sent: number;
     skipped: number;
@@ -18,7 +17,9 @@ export class ReminderService {
       errors: 0,
     };
 
-    const users = await userRepository.findActiveUsers();
+    const users: UserRow[] = userId
+      ? [await userRepository.findById(userId)].filter(Boolean) as UserRow[]
+      : await userRepository.findActiveUsers();
 
     for (const user of users) {
       results.processed++;
@@ -37,7 +38,7 @@ export class ReminderService {
           continue;
         }
 
-        const systemDesignProblem = await this.shouldSendSystemDesign(user.id)
+        const systemDesignProblem = (await this.shouldSendSystemDesign(user.id))
           ? await this.getNextSystemDesignProblem(user.id)
           : null;
 
@@ -69,19 +70,9 @@ export class ReminderService {
     return results;
   }
 
-  private async shouldSendReminder(user: any): Promise<boolean> {
-    const now = new Date();
-    const userTime = toZonedTime(now, user.timezone);
-    const [hours, minutes] = user.reminderTime.split(":").map(Number);
-    const userHour = userTime.getHours();
-    const userMinute = userTime.getMinutes();
-
-    // Check if it's the user's reminder time (within the same hour)
-    if (userHour !== hours) {
-      return false;
-    }
-
-    // Check if already sent today
+  private async shouldSendReminder(user: UserRow): Promise<boolean> {
+    // When triggered by pg_cron for a specific user at their reminder time,
+    // we just need to ensure we haven't already sent today.
     const alreadySentToday = await sentProblemRepository.findByUserToday(user.id);
     return !alreadySentToday;
   }
@@ -90,28 +81,24 @@ export class ReminderService {
     const user = await userRepository.findById(userId);
     if (!user) return false;
 
-    const lastSystemDesign = await sentProblemRepository.findByUser(
-      userId,
-      1
-    );
+    const lastSent = await sentProblemRepository.findByUser(userId, 1);
 
-    if (!lastSystemDesign || lastSystemDesign.length === 0) {
+    if (!lastSent || lastSent.length === 0) {
       return true;
     }
 
-    const lastSent = lastSystemDesign[0];
-    if (lastSent.problem.type !== "SYSTEM_DESIGN") {
+    const last = lastSent[0];
+    if (last.problem?.type !== "SYSTEM_DESIGN") {
       return true;
     }
 
-    const daysSinceLast = this.daysBetween(lastSent.sentAt, new Date());
-    return daysSinceLast >= user.systemDesignFrequency;
+    const daysSinceLast = this.daysBetween(new Date(last.sent_at), new Date());
+    return daysSinceLast >= user.system_design_frequency;
   }
 
-  private async getNextDSAProblem(userId: string) {
+  private async getNextDSAProblem(userId: string): Promise<ProblemRow | null> {
     let problem = await problemRepository.findRandomUnseenByUser(userId, "DSA");
 
-    // If all problems have been sent, reset and pick a random one
     if (!problem) {
       problem = await problemRepository.findRandomByType("DSA");
     }
@@ -119,13 +106,14 @@ export class ReminderService {
     return problem;
   }
 
-  private async getNextSystemDesignProblem(userId: string) {
+  private async getNextSystemDesignProblem(
+    userId: string
+  ): Promise<ProblemRow | null> {
     let problem = await problemRepository.findRandomUnseenByUser(
       userId,
       "SYSTEM_DESIGN"
     );
 
-    // If all problems have been sent, reset and pick a random one
     if (!problem) {
       problem = await problemRepository.findRandomByType("SYSTEM_DESIGN");
     }

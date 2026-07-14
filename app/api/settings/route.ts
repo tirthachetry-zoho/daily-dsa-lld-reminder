@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { userRepository } from "@/repositories/user-repository";
 import { z } from "zod";
 
 const settingsSchema = z.object({
@@ -19,23 +19,20 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        email: true,
-        reminderTime: true,
-        timezone: true,
-        frequencyDays: true,
-        systemDesignFrequency: true,
-        isActive: true,
-      },
-    });
+    const user = await userRepository.findById(session.user.id);
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json(user);
+    return NextResponse.json({
+      email: user.email,
+      reminderTime: user.reminder_time,
+      timezone: user.timezone,
+      frequencyDays: user.frequency_days,
+      systemDesignFrequency: user.system_design_frequency,
+      isActive: user.is_active,
+    });
   } catch (error) {
     console.error("Settings fetch error:", error);
     return NextResponse.json(
@@ -56,18 +53,22 @@ export async function POST(request: Request) {
     const body = await request.json();
     const settings = settingsSchema.parse(body);
 
-    const user = await prisma.user.update({
-      where: { id: session.user.id },
-      data: {
-        reminderTime: settings.reminderTime,
-        timezone: settings.timezone,
-        frequencyDays: settings.frequencyDays,
-        systemDesignFrequency: settings.systemDesignFrequency,
-        ...(settings.isActive !== undefined && { isActive: settings.isActive }),
-      },
+    const user = await userRepository.update(session.user.id, {
+      reminder_time: settings.reminderTime,
+      timezone: settings.timezone,
+      frequency_days: settings.frequencyDays,
+      system_design_frequency: settings.systemDesignFrequency,
+      ...(settings.isActive !== undefined && { is_active: settings.isActive }),
     });
 
-    return NextResponse.json(user);
+    return NextResponse.json({
+      email: user.email,
+      reminderTime: user.reminder_time,
+      timezone: user.timezone,
+      frequencyDays: user.frequency_days,
+      systemDesignFrequency: user.system_design_frequency,
+      isActive: user.is_active,
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

@@ -1,54 +1,93 @@
-import { prisma } from "@/lib/prisma";
-import { User } from "@prisma/client";
+import { supabase } from "@/lib/supabase";
+
+export interface UserRow {
+  id: string;
+  email: string;
+  password: string | null;
+  timezone: string;
+  reminder_time: string;
+  frequency_days: number;
+  system_design_frequency: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 export class UserRepository {
-  async findById(id: string): Promise<User | null> {
-    return prisma.user.findUnique({
-      where: { id },
-    });
+  async findById(id: string): Promise<UserRow | null> {
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw error;
+    return data as UserRow | null;
   }
 
-  async findByEmail(email: string): Promise<User | null> {
-    return prisma.user.findUnique({
-      where: { email },
-    });
+  async findByEmail(email: string): Promise<UserRow | null> {
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .maybeSingle();
+    if (error) throw error;
+    return data as UserRow | null;
   }
 
   async create(data: {
     email: string;
     password?: string;
-  }): Promise<User> {
-    return prisma.user.create({
-      data,
-    });
+  }): Promise<UserRow> {
+    const { data: created, error } = await supabase
+      .from("users")
+      .insert({
+        email: data.email,
+        password: data.password ?? null,
+      })
+      .select("*")
+      .single();
+    if (error) throw error;
+    return created as UserRow;
   }
 
   async update(
     id: string,
     data: Partial<{
       timezone: string;
-      reminderTime: string;
-      frequencyDays: number;
-      systemDesignFrequency: number;
-      isActive: boolean;
+      reminder_time: string;
+      frequency_days: number;
+      system_design_frequency: number;
+      is_active: boolean;
     }>
-  ): Promise<User> {
-    return prisma.user.update({
-      where: { id },
-      data,
-    });
+  ): Promise<UserRow> {
+    const { data: updated, error } = await supabase
+      .from("users")
+      .update(data)
+      .eq("id", id)
+      .select("*")
+      .single();
+    if (error) throw error;
+    return updated as UserRow;
   }
 
-  async findActiveUsers(): Promise<User[]> {
-    return prisma.user.findMany({
-      where: { isActive: true },
-    });
+  async findActiveUsers(): Promise<UserRow[]> {
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("is_active", true);
+    if (error) throw error;
+    return (data as UserRow[]) ?? [];
   }
 
-  async delete(id: string): Promise<User> {
-    return prisma.user.delete({
-      where: { id },
-    });
+  async delete(id: string): Promise<UserRow> {
+    const { data, error } = await supabase
+      .from("users")
+      .delete()
+      .eq("id", id)
+      .select("*")
+      .single();
+    if (error) throw error;
+    return data as UserRow;
   }
 }
 

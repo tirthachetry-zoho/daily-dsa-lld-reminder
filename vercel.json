@@ -1,0 +1,64 @@
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "regions": ["iad1"],
+  "crons": [
+    {
+      "path": "/api/send-reminders",
+      "schedule": "0 * * * *"
+    }
+  ],
+  "env": {
+    "DATABASE_URL": {
+      "description": "PostgreSQL database URL",
+      "required": true
+    },
+    "DIRECT_URL": {
+      "description": "Direct database URL for connection pooling",
+      "required": true
+    },
+    "NEXT_PUBLIC_SUPABASE_URL": {
+      "description": "Supabase project URL",
+      "required": true
+    },
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": {
+      "description": "Supabase anonymous key",
+      "required": true
+    },
+    "SUPABASE_SERVICE_ROLE_KEY": {
+      "description": "Supabase service role key",
+      "required": true
+    },
+    "RESEND_API_KEY": {
+      "description": "Resend API key for sending emails",
+      "required": true
+    },
+    "EMAIL_FROM": {
+      "description": "From email address for reminders",
+      "required": true,
+      "value": "noreply@dsareminder.com"
+    },
+    "NEXTAUTH_SECRET": {
+      "description": "NextAuth secret for session encryption",
+      "required": true
+    },
+    "NEXTAUTH_URL": {
+      "description": "NextAuth URL",
+      "required": true
+    },
+    "GOOGLE_CLIENT_ID": {
+      "description": "Google OAuth client ID",
+      "required": false
+    },
+    "GOOGLE_CLIENT_SECRET": {
+      "description": "Google OAuth client secret",
+      "required": false
+    },
+    "CRON_SECRET": {
+      "description": "Secret for cron job authentication",
+      "required": false
+    }
+  }
+}

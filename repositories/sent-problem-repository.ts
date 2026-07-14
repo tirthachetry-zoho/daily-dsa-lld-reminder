@@ -15,7 +15,7 @@ export class SentProblemRepository {
   async findById(id: string): Promise<SentProblemRow | null> {
     const { data, error } = await supabase
       .from("dsa_sent_problems")
-      .select("*, problem:problems(*)")
+      .select("*, problem:dsa_problems(*)")
       .eq("id", id)
       .maybeSingle();
     if (error) throw error;
@@ -25,7 +25,7 @@ export class SentProblemRepository {
   async findByUser(userId: string, limit?: number): Promise<SentProblemRow[]> {
     let query = supabase
       .from("dsa_sent_problems")
-      .select("*, problem:problems(*)")
+      .select("*, problem:dsa_problems(*)")
       .eq("user_id", userId)
       .order("sent_at", { ascending: false });
     if (limit) query = query.limit(limit);
@@ -40,7 +40,7 @@ export class SentProblemRepository {
   ): Promise<SentProblemRow | null> {
     const { data, error } = await supabase
       .from("dsa_sent_problems")
-      .select("*, problem:problems(*)")
+      .select("*, problem:dsa_problems(*)")
       .eq("user_id", userId)
       .eq("problem_id", problemId)
       .maybeSingle();
@@ -57,7 +57,7 @@ export class SentProblemRepository {
 
     const { data, error } = await supabase
       .from("dsa_sent_problems")
-      .select("*, problem:problems(*)")
+      .select("*, problem:dsa_problems(*)")
       .eq("user_id", userId)
       .gte("sent_at", todayStart.toISOString())
       .lte("sent_at", todayEnd.toISOString())
@@ -73,7 +73,7 @@ export class SentProblemRepository {
     const { data: created, error } = await supabase
       .from("dsa_sent_problems")
       .insert({ user_id: data.userId, problem_id: data.problemId })
-      .select("*, problem:problems(*)")
+      .select("*, problem:dsa_problems(*)")
       .single();
     if (error) throw error;
     return created as SentProblemRow;
@@ -87,7 +87,7 @@ export class SentProblemRepository {
       .from("dsa_sent_problems")
       .update({ completed })
       .eq("id", id)
-      .select("*, problem:problems(*)")
+      .select("*, problem:dsa_problems(*)")
       .single();
     if (error) throw error;
     return data as SentProblemRow;
@@ -98,7 +98,7 @@ export class SentProblemRepository {
       .from("dsa_sent_problems")
       .update({ opened })
       .eq("id", id)
-      .select("*, problem:problems(*)")
+      .select("*, problem:dsa_problems(*)")
       .single();
     if (error) throw error;
     return data as SentProblemRow;

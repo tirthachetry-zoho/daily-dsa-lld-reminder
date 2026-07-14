@@ -85,16 +85,19 @@ as $$
 $$;
 
 -- Function: (re)create a per-user cron job
+-- NOTE: the function body uses a tagged dollar-quote ($function$ ...) so the
+-- inner format() string (single-quoted) does not clash with the outer $$.
 create or replace function public.schedule_user_reminder(p_user_id uuid)
 returns void
 language plpgsql
-as $$
+as $function$
 declare
   v_reminder_time text;
   v_job_name text := 'send_reminder_' || p_user_id::text;
   v_schedule text;
   v_payload jsonb;
   v_endpoint text;
+  v_command text;
 begin
   select reminder_time into v_reminder_time from public.dsa_users where id = p_user_id;
   if v_reminder_time is null then
@@ -108,17 +111,18 @@ begin
   -- Remove any existing job for this user, then create a fresh one
   perform cron.unschedule(v_job_name);
 
-  perform cron.schedule(
-    v_job_name,
-    v_schedule,
-    format(
-      $$select supabase_functions.http_request('%s/api/send-reminders', 'POST', '{"Content-Type":"application/json"}', '%s', '{}')$$,
-      v_endpoint,
-      v_payload::text
-    )
+  v_command := format(
+    'select supabase_functions.http_request(%L, %L, %L::jsonb, %L::jsonb, %L::jsonb)',
+    v_endpoint || '/api/send-reminders',
+    'POST',
+    '{"Content-Type":"application/json"}',
+    v_payload::text,
+    '{}'
   );
+
+  perform cron.schedule(v_job_name, v_schedule, v_command);
 end;
-$$;
+$function$;
 
 -- Function: remove a user's cron job
 create or replace function public.unschedule_user_reminder(p_user_id uuid)

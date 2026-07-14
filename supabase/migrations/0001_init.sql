@@ -87,6 +87,8 @@ $$;
 -- Function: (re)create a per-user cron job
 -- NOTE: the function body uses a tagged dollar-quote ($function$ ...) so the
 -- inner format() string (single-quoted) does not clash with the outer $$.
+-- We use the ":=" assignment form (not SELECT ... INTO) to avoid PL/pgSQL
+-- mis-parsing the target as a relation (ERROR 42P01).
 create or replace function public.schedule_user_reminder(p_user_id uuid)
 returns void
 language plpgsql
@@ -99,7 +101,11 @@ declare
   v_endpoint text;
   v_command text;
 begin
-  select reminder_time into v_reminder_time from public.dsa_users where id = p_user_id;
+  v_reminder_time := (
+    select u.reminder_time
+    from public.dsa_users u
+    where u.id = p_user_id
+  );
   if v_reminder_time is null then
     return;
   end if;

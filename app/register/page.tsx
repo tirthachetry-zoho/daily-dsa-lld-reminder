@@ -112,15 +112,19 @@ export default function RegisterPage() {
         body: JSON.stringify({ email }),
       });
 
+      const data = await response.json().catch(() => ({}));
+
       if (response.ok) {
         toast({
           title: "Success",
-          description: "Account created. Redirecting to your dashboard...",
+          description:
+            data.alreadyExists
+              ? "Welcome back! Redirecting to your dashboard..."
+              : "Account created. Redirecting to your dashboard...",
         });
         router.push("/dashboard");
         router.refresh();
       } else {
-        const data = await response.json();
         toast({
           title: "Error",
           description: data.error || "Failed to create account",
@@ -256,9 +260,13 @@ export default function RegisterPage() {
                 type="button"
                 className="flex-1"
                 onClick={handleRegister}
-                disabled={verify !== "valid" || isLoading || lookup.status === "registered"}
+                disabled={verify !== "valid" || isLoading}
               >
-                {isLoading ? "Working..." : "Register"}
+                {isLoading
+                  ? "Working..."
+                  : lookup.status === "registered"
+                  ? "Go to Dashboard"
+                  : "Register"}
               </Button>
             </div>
           </div>

@@ -39,15 +39,8 @@ export async function POST(request: Request) {
 
     const existingUser = await userRepository.findByEmail(email);
 
-    if (existingUser) {
-      return NextResponse.json(
-        { error: "User already exists" },
-        { status: 400 }
-      );
-    }
-
-    const user = await userRepository.create({ email });
-
+    // Always set the email cookie so the user can access the dashboard,
+    // whether they are new or returning.
     const store = await cookies();
     store.set(EMAIL_COOKIE, email.trim().toLowerCase(), {
       httpOnly: true,
@@ -55,6 +48,15 @@ export async function POST(request: Request) {
       path: "/",
       maxAge: 60 * 60 * 24 * 30,
     });
+
+    if (existingUser) {
+      return NextResponse.json(
+        { message: "Welcome back", userId: existingUser.id, alreadyExists: true },
+        { status: 200 }
+      );
+    }
+
+    const user = await userRepository.create({ email });
 
     return NextResponse.json(
       { message: "User created successfully", userId: user.id },

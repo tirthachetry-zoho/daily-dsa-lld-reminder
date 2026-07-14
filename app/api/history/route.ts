@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { sentProblemRepository } from "@/repositories/sent-problem-repository";
+import { resolveUser } from "@/lib/email-access";
 
 export async function GET(request: Request) {
   try {
-    const session = await auth();
-
-    if (!session?.user) {
+    const resolved = await resolveUser();
+    if (!resolved?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -14,7 +13,7 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get("limit") || "50");
 
     const sentProblems = await sentProblemRepository.findByUser(
-      session.user.id,
+      resolved.user.id,
       limit
     );
 

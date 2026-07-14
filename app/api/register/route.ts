@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { userRepository } from "@/repositories/user-repository";
 import { verifyEmailDomain, isValidEmailFormat } from "@/lib/email-validation";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
+import { EMAIL_COOKIE } from "@/lib/email-access";
 
 const REGISTER_LIMIT = 10; // per window per IP
 const REGISTER_WINDOW_MS = 60_000;
@@ -45,6 +47,14 @@ export async function POST(request: Request) {
     }
 
     const user = await userRepository.create({ email });
+
+    const store = await cookies();
+    store.set(EMAIL_COOKIE, email.trim().toLowerCase(), {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+    });
 
     return NextResponse.json(
       { message: "User created successfully", userId: user.id },

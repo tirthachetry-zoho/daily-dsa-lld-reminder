@@ -265,8 +265,8 @@ export default function RegisterPage() {
 
           <p className="text-center text-sm text-muted-foreground mt-6">
             Already have an account?{" "}
-            <Link href="/login" className="text-primary hover:underline">
-              Sign in
+            <Link href="/dashboard" className="text-primary hover:underline">
+              Go to dashboard
             </Link>
           </p>
         </CardContent>

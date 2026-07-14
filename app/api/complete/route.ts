@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { sentProblemRepository } from "@/repositories/sent-problem-repository";
+import { resolveUser } from "@/lib/email-access";
 import { z } from "zod";
 
 const completeSchema = z.object({
@@ -10,9 +10,8 @@ const completeSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const session = await auth();
-
-    if (!session?.user) {
+    const resolved = await resolveUser();
+    if (!resolved?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -21,7 +20,7 @@ export async function POST(request: Request) {
 
     // Verify the sent problem belongs to the user
     const existing = await sentProblemRepository.findById(sentProblemId);
-    if (!existing || existing.user_id !== session.user.id) {
+    if (!existing || existing.user_id !== resolved.user.id) {
       return NextResponse.json(
         { error: "Sent problem not found" },
         { status: 404 }

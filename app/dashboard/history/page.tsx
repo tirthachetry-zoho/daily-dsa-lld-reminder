@@ -1,16 +1,15 @@
-import { auth } from "@/lib/auth";
+import { resolveUser } from "@/lib/email-access";
 import { sentProblemRepository } from "@/repositories/sent-problem-repository";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, Clock, ExternalLink, Youtube, BookOpen } from "lucide-react";
 
 export default async function HistoryPage() {
-  const session = await auth();
-
-  if (!session?.user) {
+  const resolved = await resolveUser();
+  if (!resolved?.user) {
     return null;
   }
 
-  const sentProblems = await sentProblemRepository.findByUser(session.user.id, 100);
+  const sentProblems = await sentProblemRepository.findByUser(resolved.user.id, 100);
 
   return (
     <div className="space-y-8">

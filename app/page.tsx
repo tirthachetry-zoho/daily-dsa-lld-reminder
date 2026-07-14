@@ -18,7 +18,7 @@ export default function Home() {
             Stay consistent, build your streak, and ace your interviews.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/login">
+            <Link href="/register">
               <Button size="lg" className="w-full sm:w-auto">
                 Get Started Free
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -119,7 +119,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-semibold mb-2">Sign Up</h3>
               <p className="text-gray-600 dark:text-gray-300">
-                Create your free account in seconds with email or Google
+                Create your free account in seconds with just your email
               </p>
             </div>
             <div className="text-center">
@@ -310,7 +310,7 @@ export default function Home() {
                 <Check className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
                 <span>Analytics dashboard</span>
               </div>
-              <Link href="/login">
+              <Link href="/register">
                 <Button size="lg" className="w-full mt-6">
                   Get Started Free
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -330,7 +330,7 @@ export default function Home() {
           <p className="text-xl text-blue-100 mb-8">
             Join thousands of developers practicing daily
           </p>
-          <Link href="/login">
+          <Link href="/register">
             <Button size="lg" variant="secondary" className="w-full sm:w-auto">
               Start Your Journey Today
               <ArrowRight className="ml-2 h-5 w-5" />
@@ -352,7 +352,7 @@ export default function Home() {
             <div>
               <h3 className="text-white font-semibold mb-4">Product</h3>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/login" className="hover:text-white">Login</Link></li>
+                <li><Link href="/register" className="hover:text-white">Get Started</Link></li>
                 <li><Link href="/dashboard" className="hover:text-white">Dashboard</Link></li>
                 <li><Link href="/settings" className="hover:text-white">Settings</Link></li>
               </ul>

@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -23,13 +22,18 @@ const navigation = [
   { name: "Email Preview", href: "/dashboard/email-preview", icon: Mail },
 ];
 
-export function DashboardSidebar() {
+export function DashboardSidebar({ email }: { email: string }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isOpen, setIsisOpen] = useState(false);
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: "/" });
+    await fetch("/api/logout", { method: "POST" });
+    router.push("/register");
+    router.refresh();
   };
+
+  const initial = email ? email[0].toUpperCase() : "U";
 
   return (
     <>
@@ -85,15 +89,15 @@ export function DashboardSidebar() {
             <div className="flex items-center mb-4">
               <Avatar className="h-10 w-10 mr-3">
                 <AvatarFallback className="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400">
-                  U
+                  {initial}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  User
+                  {email}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                  user@example.com
+                  Signed in
                 </p>
               </div>
             </div>

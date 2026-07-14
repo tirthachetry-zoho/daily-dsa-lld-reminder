@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { userRepository } from "@/repositories/user-repository";
+import { resolveUser } from "@/lib/email-access";
 import { z } from "zod";
 
 const settingsSchema = z.object({
@@ -13,17 +13,11 @@ const settingsSchema = z.object({
 
 export async function GET(request: Request) {
   try {
-    const session = await auth();
-
-    if (!session?.user) {
+    const resolved = await resolveUser();
+    if (!resolved?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const user = await userRepository.findById(session.user.id);
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    const user = resolved.user;
 
     return NextResponse.json({
       email: user.email,
@@ -44,16 +38,15 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = await auth();
-
-    if (!session?.user) {
+    const resolved = await resolveUser();
+    if (!resolved?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
     const settings = settingsSchema.parse(body);
 
-    const user = await userRepository.update(session.user.id, {
+    const user = await userRepository.update(resolved.user.id, {
       reminder_time: settings.reminderTime,
       timezone: settings.timezone,
       frequency_days: settings.frequencyDays,

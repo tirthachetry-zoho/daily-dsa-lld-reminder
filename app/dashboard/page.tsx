@@ -1,20 +1,14 @@
-import { auth } from "@/lib/auth";
-import { userRepository } from "@/repositories/user-repository";
+import { resolveUser } from "@/lib/email-access";
 import { sentProblemRepository } from "@/repositories/sent-problem-repository";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Flame, Target, Clock, TrendingUp, CheckCircle2, Calendar } from "lucide-react";
 
 export default async function DashboardPage() {
-  const session = await auth();
-
-  if (!session?.user) {
+  const resolved = await resolveUser();
+  if (!resolved?.user) {
     return null;
   }
-
-  const user = await userRepository.findById(session.user.id);
-  if (!user) {
-    return null;
-  }
+  const user = resolved.user;
 
   const sentProblems = await sentProblemRepository.findByUser(user.id, 30);
 

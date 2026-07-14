@@ -1,21 +1,23 @@
-import { auth } from "@/lib/auth";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
+import { EMAIL_COOKIE } from "@/lib/email-access";
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
+  const store = await cookies();
+  const email = store.get(EMAIL_COOKIE)?.value;
 
-  if (!session?.user) {
-    redirect("/login");
+  if (!email) {
+    redirect("/register");
   }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <DashboardSidebar />
+      <DashboardSidebar email={email} />
       <main className="lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
         {children}
       </main>

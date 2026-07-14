@@ -1,8 +1,20 @@
 import { NextResponse } from "next/server";
 import { userRepository } from "@/repositories/user-repository";
 import { verifyEmailDomain, isValidEmailFormat } from "@/lib/email-validation";
+import { rateLimit, clientKey } from "@/lib/rate-limit";
+
+const REGISTER_LIMIT = 10; // per window per IP
+const REGISTER_WINDOW_MS = 60_000;
 
 export async function POST(request: Request) {
+  const rl = rateLimit(clientKey(request, "register"), REGISTER_LIMIT, REGISTER_WINDOW_MS);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests, please slow down" },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } }
+    );
+  }
+
   try {
     const body = await request.json();
     const email: string = body.email ?? "";

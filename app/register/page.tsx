@@ -10,6 +10,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "@/components/ui/use-toast";
 
 type VerifyState = "idle" | "checking" | "valid" | "invalid";
+type LookupState =
+  | { status: "none" }
+  | { status: "loading" }
+  | { status: "registered"; config: Record<string, unknown> }
+  | { status: "not-registered" }
+  | { status: "error"; message: string };
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -17,11 +23,13 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [verify, setVerify] = useState<VerifyState>("idle");
   const [verifyReason, setVerifyReason] = useState<string>("");
+  const [lookup, setLookup] = useState<LookupState>({ status: "none" });
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Instantly verify the email (format + domain/MX) as the user types.
   const handleEmailChange = (value: string) => {
     setEmail(value);
+    setLookup({ status: "none" });
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     const trimmed = value.trim();
@@ -54,8 +62,39 @@ export default function RegisterPage() {
     }, 500);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Look up the email to see if it's already registered (and show config).
+  const handleLookup = async () => {
+    const trimmed = email.trim().toLowerCase();
+    if (verify !== "valid") {
+      toast({
+        title: "Error",
+        description: verifyReason || "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLookup({ status: "loading" });
+    try {
+      const res = await fetch("/api/user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmed }),
+      });
+      const data = await res.json();
+      if (res.ok && data.registered) {
+        setLookup({ status: "registered", config: data.config });
+      } else if (res.ok && !data.registered) {
+        setLookup({ status: "not-registered" });
+      } else {
+        setLookup({ status: "error", message: data.error || "Lookup failed" });
+      }
+    } catch {
+      setLookup({ status: "error", message: "Something went wrong" });
+    }
+  };
+
+  const handleRegister = async () => {
     if (verify !== "valid") {
       toast({
         title: "Error",
@@ -99,6 +138,36 @@ export default function RegisterPage() {
     }
   };
 
+  const handleUnregister = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/user", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+      if (response.ok) {
+        toast({ title: "Success", description: "You have been unregistered." });
+        setLookup({ status: "not-registered" });
+      } else {
+        const data = await response.json();
+        toast({
+          title: "Error",
+          description: data.error || "Failed to unregister",
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "Something went wrong",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 px-4">
       <Card className="w-full max-w-md">
@@ -109,7 +178,7 @@ export default function RegisterPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -132,14 +201,67 @@ export default function RegisterPage() {
                 <p className="text-xs text-red-600">{verifyReason}</p>
               )}
             </div>
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading || verify !== "valid"}
-            >
-              {isLoading ? "Creating account..." : "Continue"}
-            </Button>
-          </form>
+
+            {lookup.status === "loading" && (
+              <p className="text-xs text-muted-foreground">Looking up account...</p>
+            )}
+
+            {lookup.status === "registered" && (
+              <div className="rounded-md border border-blue-200 bg-blue-50 dark:bg-blue-950/40 p-3 text-sm space-y-1">
+                <p className="font-medium">This email is already registered.</p>
+                <p>Reminder time: {(lookup.config as any).reminderTime}</p>
+                <p>Timezone: {(lookup.config as any).timezone}</p>
+                <p>
+                  DSA every {(lookup.config as any).frequencyDays} day(s) · System
+                  Design every {(lookup.config as any).systemDesignFrequency} day(s)
+                </p>
+                <p>
+                  Status: {(lookup.config as any).isActive ? "Active" : "Paused"}
+                </p>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="mt-2"
+                  onClick={handleUnregister}
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Removing..." : "Unregister this email"}
+                </Button>
+              </div>
+            )}
+
+            {lookup.status === "not-registered" && (
+              <div className="rounded-md border border-green-200 bg-green-50 dark:bg-green-950/40 p-3 text-sm">
+                <p className="font-medium">Not registered yet.</p>
+                <p>Continue to create your reminder config.</p>
+              </div>
+            )}
+
+            {lookup.status === "error" && (
+              <p className="text-xs text-red-600">{lookup.message}</p>
+            )}
+
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={handleLookup}
+                disabled={verify !== "valid" || isLoading}
+              >
+                Check account
+              </Button>
+              <Button
+                type="button"
+                className="flex-1"
+                onClick={handleRegister}
+                disabled={verify !== "valid" || isLoading || lookup.status === "registered"}
+              >
+                {isLoading ? "Working..." : "Register"}
+              </Button>
+            </div>
+          </div>
 
           <p className="text-center text-sm text-muted-foreground mt-6">
             Already have an account?{" "}

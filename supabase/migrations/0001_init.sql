@@ -89,9 +89,14 @@ $$;
 -- inner format() string (single-quoted) does not clash with the outer $$.
 -- We use the ":=" assignment form (not SELECT ... INTO) to avoid PL/pgSQL
 -- mis-parsing the target as a relation (ERROR 42P01).
+-- SECURITY DEFINER lets the function run as its owner (which has cron
+-- privileges) so the app's service_role can schedule jobs without
+-- "permission denied for schema cron" (ERROR 42501).
 create or replace function public.schedule_user_reminder(p_user_id uuid)
 returns void
 language plpgsql
+security definer
+set search_path = public, cron, pg_catalog
 as $function$
 declare
   v_reminder_time text;
@@ -134,6 +139,8 @@ $function$;
 create or replace function public.unschedule_user_reminder(p_user_id uuid)
 returns void
 language plpgsql
+security definer
+set search_path = public, cron, pg_catalog
 as $$
 begin
   perform cron.unschedule('send_reminder_' || p_user_id::text);
@@ -144,6 +151,8 @@ $$;
 create or replace function public.sync_user_cron()
 returns trigger
 language plpgsql
+security definer
+set search_path = public, cron, pg_catalog
 as $$
 begin
   if (TG_OP = 'INSERT' or NEW.reminder_time <> OLD.reminder_time or NEW.is_active <> OLD.is_active) then
@@ -166,6 +175,8 @@ create trigger trg_sync_user_cron
 create or replace function public.cleanup_user_cron()
 returns trigger
 language plpgsql
+security definer
+set search_path = public, cron, pg_catalog
 as $$
 begin
   perform public.unschedule_user_reminder(OLD.id);

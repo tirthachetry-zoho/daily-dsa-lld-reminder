@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { ProblemRow } from "@/repositories/problem-repository";
+import { cacheGet, cacheSet, cacheDeleteByPrefix, TTL } from "@/lib/cache";
 
 export interface SentProblemRow {
   id: string;
@@ -23,6 +24,10 @@ export class SentProblemRepository {
   }
 
   async findByUser(userId: string, limit?: number): Promise<SentProblemRow[]> {
+    const key = `sent:user:${userId}:${limit ?? "all"}`;
+    const cached = cacheGet<SentProblemRow[]>(key);
+    if (cached) return cached;
+
     let query = supabase
       .from("dsa_sent_problems")
       .select("*, problem:dsa_problems(*)")
@@ -31,7 +36,9 @@ export class SentProblemRepository {
     if (limit) query = query.limit(limit);
     const { data, error } = await query;
     if (error) throw error;
-    return (data as SentProblemRow[]) ?? [];
+    const rows = (data as SentProblemRow[]) ?? [];
+    cacheSet(key, rows, TTL.SHORT);
+    return rows;
   }
 
   async findByUserAndProblem(
@@ -76,6 +83,7 @@ export class SentProblemRepository {
       .select("*, problem:dsa_problems(*)")
       .single();
     if (error) throw error;
+    cacheDeleteByPrefix(`sent:user:${data.userId}:`);
     return created as SentProblemRow;
   }
 
@@ -90,6 +98,7 @@ export class SentProblemRepository {
       .select("*, problem:dsa_problems(*)")
       .single();
     if (error) throw error;
+    cacheDeleteByPrefix(`sent:user:`);
     return data as SentProblemRow;
   }
 

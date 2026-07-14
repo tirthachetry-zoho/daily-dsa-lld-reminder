@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { cacheGet, cacheSet, cacheDelete, cacheDeleteByPrefix, TTL } from "@/lib/cache";
 
 export interface UserRow {
   id: string;
@@ -25,13 +26,19 @@ export class UserRepository {
   }
 
   async findByEmail(email: string): Promise<UserRow | null> {
+    const key = `user:email:${email.toLowerCase()}`;
+    const cached = cacheGet<UserRow>(key);
+    if (cached) return cached;
+
     const { data, error } = await supabase
       .from("dsa_users")
       .select("*")
       .eq("email", email)
       .maybeSingle();
     if (error) throw error;
-    return data as UserRow | null;
+    const row = data as UserRow | null;
+    if (row) cacheSet(key, row, TTL.MEDIUM);
+    return row;
   }
 
   async create(data: {
@@ -47,6 +54,7 @@ export class UserRepository {
       .select("*")
       .single();
     if (error) throw error;
+    cacheDeleteByPrefix("user:active:");
     return created as UserRow;
   }
 
@@ -67,16 +75,24 @@ export class UserRepository {
       .select("*")
       .single();
     if (error) throw error;
+    cacheDeleteByPrefix(`user:id:${id}:`);
+    cacheDeleteByPrefix("user:active:");
     return updated as UserRow;
   }
 
   async findActiveUsers(): Promise<UserRow[]> {
+    const key = "user:active:all";
+    const cached = cacheGet<UserRow[]>(key);
+    if (cached) return cached;
+
     const { data, error } = await supabase
       .from("dsa_users")
       .select("*")
       .eq("is_active", true);
     if (error) throw error;
-    return (data as UserRow[]) ?? [];
+    const rows = (data as UserRow[]) ?? [];
+    cacheSet(key, rows, TTL.ACTIVE_USERS);
+    return rows;
   }
 
   async delete(id: string): Promise<UserRow> {
@@ -87,6 +103,8 @@ export class UserRepository {
       .select("*")
       .single();
     if (error) throw error;
+    cacheDeleteByPrefix(`user:id:${id}:`);
+    cacheDeleteByPrefix("user:active:");
     return data as UserRow;
   }
 }

@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { cacheGet, cacheSet, TTL } from "@/lib/cache";
 
 export type ProblemType = "DSA" | "SYSTEM_DESIGN";
 export type Difficulty = "EASY" | "MEDIUM" | "HARD";
@@ -30,23 +31,24 @@ export class ProblemRepository {
   }
 
   async findByType(type: ProblemType): Promise<ProblemRow[]> {
+    const key = `problem:type:${type}`;
+    const cached = cacheGet<ProblemRow[]>(key);
+    if (cached) return cached;
+
     const { data, error } = await supabase
       .from("dsa_problems")
       .select("*")
       .eq("type", type);
     if (error) throw error;
-    return (data as ProblemRow[]) ?? [];
+    const rows = (data as ProblemRow[]) ?? [];
+    cacheSet(key, rows, TTL.LONG);
+    return rows;
   }
 
   async findRandomByType(type: ProblemType): Promise<ProblemRow | null> {
-    const { data, error } = await supabase
-      .from("dsa_problems")
-      .select("id")
-      .eq("type", type);
-    if (error) throw error;
-    const rows = (data as { id: string }[]) ?? [];
-    if (rows.length === 0) return null;
-    const random = rows[Math.floor(Math.random() * rows.length)];
+    const all = await this.findByType(type);
+    if (all.length === 0) return null;
+    const random = all[Math.floor(Math.random() * all.length)];
     return this.findById(random.id);
   }
 

@@ -53,6 +53,9 @@ export class EmailService {
     // send time. This avoids relying on the host's env-var injection.
     const apiKey = await getAppConfig("brevo_api_key");
     const from = await getAppConfig("email_from");
+    const baseUrl =
+      (await getAppConfig("nextauth_url")) ||
+      "https://daily-dsa-lld-reminder.vercel.app";
 
     if (!apiKey) {
       throw new EmailConfigError(
@@ -67,7 +70,12 @@ export class EmailService {
       );
     }
 
-    const emailHtml = this.generateEmailHtml(to, dsaProblem, systemDesignProblem);
+    const emailHtml = this.generateEmailHtml(
+      to,
+      dsaProblem,
+      systemDesignProblem,
+      baseUrl
+    );
 
     const response = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
@@ -126,7 +134,8 @@ export class EmailService {
   private generateEmailHtml(
     to: string,
     dsaProblem: ProblemRow,
-    systemDesignProblem: ProblemRow | null
+    systemDesignProblem: ProblemRow | null,
+    baseUrl: string
   ): string {
     const difficultyColors = {
       EASY: "#dcfce7",
@@ -140,12 +149,12 @@ export class EmailService {
       HARD: "#991b1b",
     };
 
-    const unsubscribeUrl = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/unsubscribe?email=${encodeURIComponent(to)}`;
+    const unsubscribeUrl = `${baseUrl}/unsubscribe?email=${encodeURIComponent(to)}`;
     const year = 2026;
     const authorName = "Tirtha";
     const authorLinkedIn = "https://www.linkedin.com/in/tirthachetry/";
-    const privacyUrl = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/privacy`;
-    const termsUrl = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/terms`;
+    const privacyUrl = `${baseUrl}/privacy`;
+    const termsUrl = `${baseUrl}/terms`;
 
     return `
       <!DOCTYPE html>

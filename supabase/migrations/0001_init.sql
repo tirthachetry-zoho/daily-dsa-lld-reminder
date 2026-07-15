@@ -26,7 +26,7 @@ create table if not exists public.dsa_users (
   id                    uuid primary key default gen_random_uuid(),
   email                 text unique not null,
   password              text,
-  timezone              text not null default 'UTC',
+  timezone              text not null default 'Asia/Kolkata',
   reminder_time         text not null default '09:00',
   frequency_days        int  not null default 1,
   system_design_frequency int not null default 3,

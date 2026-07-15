@@ -7,17 +7,17 @@ import { supabase } from "@/lib/supabase";
  * (e.g. Vercel). The cron job already reads `cron_secret` from here,
  * so this path is proven to work at runtime.
  */
-async function getAppConfig(key: string): Promise<string | null> {
+async function getAppConfig(key: string): Promise<string | undefined> {
   try {
     const { data, error } = await supabase
       .from("app_config")
       .select("value")
       .eq("key", key)
       .maybeSingle();
-    if (error) return null;
-    return (data?.value as string) ?? null;
+    if (error) return undefined;
+    return (data?.value as string) ?? undefined;
   } catch {
-    return null;
+    return undefined;
   }
 }
 
@@ -54,10 +54,10 @@ export class EmailService {
     // 401 from Brevo when a variable is missing on the host.
     // Prefer the deployment host's env var; fall back to Supabase app_config
     // (proven to be injected at runtime even when host env vars are blank).
-    let apiKey = process.env.BREVO_API_KEY;
+    let apiKey: string | undefined = process.env.BREVO_API_KEY;
     if (!apiKey) apiKey = await getAppConfig("brevo_api_key");
 
-    let from = process.env.EMAIL_FROM;
+    let from: string | undefined = process.env.EMAIL_FROM;
     if (!from) from = await getAppConfig("email_from");
 
     if (!apiKey) {

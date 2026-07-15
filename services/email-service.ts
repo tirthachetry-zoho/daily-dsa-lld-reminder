@@ -22,7 +22,7 @@ export class EmailService {
         },
         to: [{ email: to }],
         subject: `🚀 Daily Coding Reminder - ${dsaProblem.title}`,
-        html: emailHtml,
+        htmlContent: emailHtml,
       }),
     });
 

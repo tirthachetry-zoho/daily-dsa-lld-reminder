@@ -9,12 +9,14 @@ export class ReminderService {
     sent: number;
     skipped: number;
     errors: number;
+    errorDetails: string[];
   }> {
     const results = {
       processed: 0,
       sent: 0,
       skipped: 0,
       errors: 0,
+      errorDetails: [] as string[],
     };
 
     const users: UserRow[] = userId
@@ -86,6 +88,9 @@ export class ReminderService {
             );
           }
           results.errors++;
+          results.errorDetails.push(
+            `${user.email}: ${emailError instanceof Error ? emailError.message : String(emailError)}`
+          );
           continue;
         }
 
@@ -105,6 +110,9 @@ export class ReminderService {
       } catch (error) {
         console.error(`Error processing user ${user.email}:`, error);
         results.errors++;
+        results.errorDetails.push(
+          `${user.email}: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
     }
 

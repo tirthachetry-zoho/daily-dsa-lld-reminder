@@ -1,7 +1,7 @@
 import { userRepository, UserRow } from "@/repositories/user-repository";
 import { problemRepository, ProblemRow } from "@/repositories/problem-repository";
 import { sentProblemRepository } from "@/repositories/sent-problem-repository";
-import { emailService } from "@/services/email-service";
+import { emailService, BrevoError, EmailConfigError } from "@/services/email-service";
 
 export class ReminderService {
   async processReminders(userId?: string): Promise<{
@@ -49,16 +49,41 @@ export class ReminderService {
             systemDesignProblem
           );
         } catch (emailError) {
-          // After retries, the address is likely invalid/bouncing.
-          // Mark the user inactive so we stop trying to email them.
-          console.error(
-            `Permanently failed to email ${user.email} after retries. Marking inactive.`,
-            emailError
-          );
-          try {
-            await userRepository.update(user.id, { is_active: false });
-          } catch (updateErr) {
-            console.error(`Failed to deactivate user ${user.email}:`, updateErr);
+          // Decide whether to permanently deactivate the user.
+          // Only deactivate on a genuine, permanent recipient bounce from
+          // Brevo (e.g. 400 "invalid recipient" / 4xx hard-bounce). For
+          // config errors (missing BREVO_API_KEY/EMAIL_FROM) or transient
+          // 5xx failures, we must NOT deactivate — otherwise a single
+          // misconfiguration would silently disable every user forever.
+          const isPermanentBounce =
+            emailError instanceof BrevoError &&
+            emailError.status >= 400 &&
+            emailError.status < 500 &&
+            !/quota|limit|unauthorized|forbidden|api key|sender/i.test(
+              emailError.body
+            );
+
+          if (isPermanentBounce) {
+            console.error(
+              `Permanently failed to email ${user.email} (invalid recipient). Marking inactive.`,
+              emailError
+            );
+            try {
+              await userRepository.update(user.id, { is_active: false });
+            } catch (updateErr) {
+              console.error(`Failed to deactivate user ${user.email}:`, updateErr);
+            }
+          } else if (emailError instanceof EmailConfigError) {
+            // Config problem — log loudly but do not deactivate or retry
+            // pointlessly for other users; surface it so it gets fixed.
+            console.error(
+              `Email config error while emailing ${user.email}: ${emailError.message}`
+            );
+          } else {
+            console.error(
+              `Transient/unknown email failure for ${user.email} (not deactivating):`,
+              emailError
+            );
           }
           results.errors++;
           continue;

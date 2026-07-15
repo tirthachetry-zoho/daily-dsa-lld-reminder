@@ -1,6 +1,26 @@
 import { ProblemRow } from "@/repositories/problem-repository";
 
-const BREVO_API_KEY = process.env.BREVO_API_KEY;
+/**
+ * Typed error carrying the Brevo HTTP status so callers can decide whether
+ * a failure is a permanent recipient bounce (deactivate user) vs a
+ * config/transient error (do NOT deactivate).
+ */
+export class BrevoError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly body: string
+  ) {
+    super(`Brevo API error: ${status} - ${body}`);
+    this.name = "BrevoError";
+  }
+}
+
+export class EmailConfigError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "EmailConfigError";
+  }
+}
 
 export class EmailService {
   async sendReminderEmail(
@@ -8,17 +28,36 @@ export class EmailService {
     dsaProblem: ProblemRow,
     systemDesignProblem: ProblemRow | null
   ): Promise<void> {
+    // Read env at call time (defensive) and validate explicitly so the
+    // deployed app fails with a clear, actionable error instead of a silent
+    // 401 from Brevo when a variable is missing on the host.
+    const apiKey = process.env.BREVO_API_KEY;
+    const from = process.env.EMAIL_FROM;
+
+    if (!apiKey) {
+      throw new EmailConfigError(
+        "BREVO_API_KEY is not set in the environment. Set it in your deployment " +
+          "host's environment variables (e.g. Vercel Project Settings)."
+      );
+    }
+    if (!from) {
+      throw new EmailConfigError(
+        "EMAIL_FROM is not set in the environment. Set it to a Brevo-verified " +
+          "sender address in your deployment host's environment variables."
+      );
+    }
+
     const emailHtml = this.generateEmailHtml(to, dsaProblem, systemDesignProblem);
 
     const response = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "api-key": BREVO_API_KEY || "",
+        "api-key": apiKey,
       },
       body: JSON.stringify({
         sender: {
-          email: process.env.EMAIL_FROM || "noreply@dsareminder.com",
+          email: from,
         },
         to: [{ email: to }],
         subject: `🚀 Daily Coding Reminder - ${dsaProblem.title}`,
@@ -28,7 +67,7 @@ export class EmailService {
 
     if (!response.ok) {
       const error = await response.text();
-      throw new Error(`Brevo API error: ${response.status} - ${error}`);
+      throw new BrevoError(response.status, error);
     }
   }
 

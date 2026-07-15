@@ -2,10 +2,10 @@ import { ProblemRow } from "@/repositories/problem-repository";
 import { supabase } from "@/lib/supabase";
 
 /**
- * Reads a value from the Supabase `app_config` table. Used as a fallback
- * for secrets that may not be injected by the deployment host's env vars
- * (e.g. Vercel). The cron job already reads `cron_secret` from here,
- * so this path is proven to work at runtime.
+ * Reads a value from the Supabase `app_config` table. The Brevo API key
+ * and verified sender are stored here (keys `brevo_api_key` and
+ * `email_from`) rather than in the host's env vars, so the deployed app
+ * always reads them from the database at send time.
  */
 async function getAppConfig(key: string): Promise<string | undefined> {
   try {
@@ -49,28 +49,21 @@ export class EmailService {
     dsaProblem: ProblemRow,
     systemDesignProblem: ProblemRow | null
   ): Promise<void> {
-    // Read env at call time (defensive) and validate explicitly so the
-    // deployed app fails with a clear, actionable error instead of a silent
-    // 401 from Brevo when a variable is missing on the host.
-    // Prefer the deployment host's env var; fall back to Supabase app_config
-    // (proven to be injected at runtime even when host env vars are blank).
-    let apiKey: string | undefined = process.env.BREVO_API_KEY;
-    if (!apiKey) apiKey = await getAppConfig("brevo_api_key");
-
-    let from: string | undefined = process.env.EMAIL_FROM;
-    if (!from) from = await getAppConfig("email_from");
+    // Read the Brevo credentials from the database (app_config table) at
+    // send time. This avoids relying on the host's env-var injection.
+    const apiKey = await getAppConfig("brevo_api_key");
+    const from = await getAppConfig("email_from");
 
     if (!apiKey) {
       throw new EmailConfigError(
-        "BREVO_API_KEY is not set. Set it in your deployment host's " +
-          "environment variables (e.g. Vercel Project Settings) or in the " +
-          "Supabase app_config table as key 'brevo_api_key'."
+        "BREVO_API_KEY is not set. Add it to the Supabase app_config " +
+          "table with key 'brevo_api_key'."
       );
     }
     if (!from) {
       throw new EmailConfigError(
-        "EMAIL_FROM is not set. Set it in your deployment host's environment " +
-          "variables or in the Supabase app_config table as key 'email_from'."
+        "EMAIL_FROM is not set. Add it to the Supabase app_config table " +
+          "with key 'email_from'."
       );
     }
 

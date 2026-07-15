@@ -2,6 +2,7 @@ import { resolveUser } from "@/lib/email-access";
 import { sentProblemRepository } from "@/repositories/sent-problem-repository";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Flame, Target, Clock, TrendingUp, CheckCircle2, Calendar } from "lucide-react";
+import { MarkCompleteButton } from "@/components/mark-complete-button";
 
 export default async function DashboardPage() {
   const resolved = await resolveUser();
@@ -221,6 +222,10 @@ export default async function DashboardPage() {
                     Opened
                   </span>
                 )}
+                <MarkCompleteButton
+                  sentProblemId={todayProblem.id}
+                  initialCompleted={todayProblem.completed}
+                />
               </div>
             </div>
           </CardContent>
@@ -281,6 +286,10 @@ export default async function DashboardPage() {
                   }`}>
                      {sentProblem.problem?.difficulty}
                   </span>
+                  <MarkCompleteButton
+                    sentProblemId={sentProblem.id}
+                    initialCompleted={sentProblem.completed}
+                  />
                 </div>
               </div>
             ))}

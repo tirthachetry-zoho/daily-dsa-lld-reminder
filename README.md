@@ -31,7 +31,7 @@ A production-ready SaaS web application that delivers daily DSA (Data Structures
 - **NextAuth v5** (email/password + Google OAuth)
 
 ### Email & Scheduling
-- **Resend** (Email service)
+- **Brevo** (Email service)
 - **pg_cron** (in-database scheduling on Supabase)
 
 ### Deployment
@@ -41,7 +41,7 @@ A production-ready SaaS web application that delivers daily DSA (Data Structures
 
 - Node.js 20+
 - A **Supabase** project (PostgreSQL + pg_cron enabled)
-- A **Resend** API key
+- A **Brevo** API key
 - Google OAuth credentials (optional, for Google login)
 
 ## 🚀 Getting Started
@@ -73,10 +73,9 @@ SUPABASE_SERVICE_ROLE_KEY="your-supabase-service-role-key"
 # Set this to your deployed URL (e.g. https://your-app.vercel.app) in production.
 API_BASE_URL="http://localhost:3000"
 
-# Resend (email sending)
-RESEND_API_KEY="your-resend-api-key"
+# Brevo (email sending)
+BREVO_API_KEY="your-brevo-api-key"
 # Must be a verified sender domain, e.g. "noreply@yourdomain.com"
-# For local testing without a domain use "onboarding@resend.dev"
 EMAIL_FROM="noreply@yourdomain.com"
 
 # NextAuth
@@ -134,11 +133,10 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
    - **`service_role` key** → `SUPABASE_SERVICE_ROLE_KEY` (keep secret; never expose to the client).
 3. **Database → Extensions**: enable **`pg_cron`** (and `pgcrypto`, which the migration enables automatically).
 
-### From Resend (email sending)
-1. Sign up at [resend.com](https://resend.com) → **API Keys → Create API Key** → `RESEND_API_KEY`.
-2. **Domains → Add Domain** and verify it (e.g. `yourdomain.com`).
+### From Brevo (email sending)
+1. Sign up at [brevo.com](https://www.brevo.com) → **API Keys → Create API Key** → `BREVO_API_KEY`.
+2. **Senders → Senders & Domains** and verify your sender domain (e.g. `yourdomain.com`).
 3. Set `EMAIL_FROM` to an address on that domain, e.g. `noreply@yourdomain.com`.
-   (For local testing without a verified domain, use `onboarding@resend.dev`.)
 
 ### From NextAuth (sessions)
 - `NEXTAUTH_SECRET`: generate with `openssl rand -base64 32`.
@@ -287,7 +285,7 @@ Scheduling is handled **inside the database** with `pg_cron` (no external cron h
    (in the server's timezone) and invokes `supabase_functions.http_request` against
    `POST <API_BASE_URL>/api/send-reminders` with `{ "userId": "..." }`.
 3. The API route selects the next unseen DSA problem (and a System Design problem per the configured frequency),
-   sends the email via Resend, and records it in `sent_problems`.
+   sends the email via Brevo, and records it in `sent_problems`.
 
 > The `API_BASE_URL` is read from the `app.settings.api_base_url` database setting (set it after the migration, as
 > shown in step 4 above). In production point it at your Vercel URL.
@@ -323,7 +321,7 @@ API_BASE_URL="https://your-app.vercel.app" npm run db:seed
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `API_BASE_URL` — your Vercel deployment URL (e.g. `https://your-app.vercel.app`)
-- `RESEND_API_KEY`
+- `BREVO_API_KEY`
 - `EMAIL_FROM`
 - `NEXTAUTH_SECRET`
 - `NEXTAUTH_URL` — your Vercel deployment URL
@@ -386,4 +384,4 @@ For issues or questions, please open an issue on GitHub.
 
 ---
 
-Built with ❤️ using Next.js, Supabase, and Resend
+Built with ❤️ using Next.js, Supabase, and Brevo

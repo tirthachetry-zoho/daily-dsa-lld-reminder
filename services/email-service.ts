@@ -1,7 +1,6 @@
-import { Resend } from "resend";
 import { ProblemRow } from "@/repositories/problem-repository";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
 
 export class EmailService {
   async sendReminderEmail(
@@ -11,12 +10,26 @@ export class EmailService {
   ): Promise<void> {
     const emailHtml = this.generateEmailHtml(to, dsaProblem, systemDesignProblem);
 
-    await resend.emails.send({
-      from: process.env.EMAIL_FROM || "noreply@dsareminder.com",
-      to,
-      subject: `🚀 Daily Coding Reminder - ${dsaProblem.title}`,
-      html: emailHtml,
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": BREVO_API_KEY || "",
+      },
+      body: JSON.stringify({
+        sender: {
+          email: process.env.EMAIL_FROM || "noreply@dsareminder.com",
+        },
+        to: [{ email: to }],
+        subject: `🚀 Daily Coding Reminder - ${dsaProblem.title}`,
+        html: emailHtml,
+      }),
     });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Brevo API error: ${response.status} - ${error}`);
+    }
   }
 
   /**

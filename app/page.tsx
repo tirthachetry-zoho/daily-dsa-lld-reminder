@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight, Check, Clock, Zap, Target, BarChart3, Users, Mail, Calendar, TrendingUp } from "lucide-react";
+import { ArrowRight, Check, Clock, Zap, Target, BarChart3, Users, Mail, Calendar, TrendingUp, Linkedin, AlertCircle } from "lucide-react";
 
 export default function Home() {
   return (
@@ -29,6 +29,12 @@ export default function Home() {
                 Learn More
               </Button>
             </Link>
+          </div>
+          <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 dark:bg-amber-950/40 px-4 py-2 text-sm text-amber-800 dark:text-amber-200">
+            <AlertCircle className="h-4 w-4" />
+            <span>
+              Limited to the first <strong>300 daily solvers</strong> due to email-send limits.
+            </span>
           </div>
         </div>
       </section>
@@ -349,6 +355,39 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Connect / Scale with us */}
+      <section className="bg-gray-50 dark:bg-gray-900 py-20">
+        <div className="container mx-auto px-4 max-w-3xl text-center">
+          <Linkedin className="h-12 w-12 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
+          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            Help Us Scale Past 300 Solvers
+          </h2>
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-6">
+            Daily reminders are currently limited to the first 300 solvers because
+            of email-send constraints on our free provider. If you have an email
+            platform with unlimited (or high-volume) sending access, let's connect
+            and open this up to everyone.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="https://www.linkedin.com/in/tirthachetry/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button size="lg" className="w-full sm:w-auto">
+                <Linkedin className="mr-2 h-5 w-5" />
+                Connect on LinkedIn
+              </Button>
+            </a>
+            <Link href="/register">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                Join the Waitlist (Register)
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-300 py-12">
         <div className="container mx-auto px-4">
@@ -358,6 +397,15 @@ export default function Home() {
               <p className="text-sm">
                 Daily coding problems delivered to your inbox to help you ace your technical interviews.
               </p>
+              <a
+                href="https://www.linkedin.com/in/tirthachetry/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 mt-3 text-sm text-blue-400 hover:text-white"
+              >
+                <Linkedin className="h-4 w-4" />
+                Connect on LinkedIn
+              </a>
             </div>
             <div>
               <h3 className="text-white font-semibold mb-4">Product</h3>
